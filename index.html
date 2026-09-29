@@ -1,0 +1,3054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Docket</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bg: #F3F3EE;
+    --paper: #FBFAF6;
+    --ink: #1E2421;
+    --muted: #6B6F66;
+    --faint: #9A9D93;
+    --accent: #2F6F62;
+    --accent-ink: #ffffff;
+    --accent-soft: #DCEAE6;
+    --line: #D8D5CB;
+    --overdue: #B4483A;
+    --overdue-soft: rgba(180,72,58,0.35);
+    --overdue-bg: rgba(180,72,58,0.08);
+    --done: #9B9A8E;
+    --paper-line: rgba(107,111,102,0.09);
+    --card-bg: rgba(255,255,255,0.55);
+    --card-border: rgba(30,36,33,0.09);
+    --shadow: 0 1px 2px rgba(30,36,33,0.05), 0 6px 18px rgba(30,36,33,0.06);
+    --high: #B4483A;
+    --med: #B08A3E;
+    --low: #52697A;
+    --radius: 8px;
+    --radius-sm: 4px;
+  }
+
+  :root[data-theme="dark"]{
+    --bg: #1B1F1C;
+    --paper: #20251F;
+    --ink: #EDEBE2;
+    --muted: #A2A79A;
+    --faint: #767E70;
+    --accent: #6FBFA6;
+    --accent-ink: #10201A;
+    --accent-soft: rgba(111,191,166,0.16);
+    --line: #363C34;
+    --overdue: #E28A79;
+    --overdue-soft: rgba(226,138,121,0.35);
+    --overdue-bg: rgba(226,138,121,0.10);
+    --done: #6C7266;
+    --paper-line: rgba(237,235,226,0.045);
+    --card-bg: rgba(255,255,255,0.035);
+    --card-border: rgba(237,235,226,0.10);
+    --shadow: 0 1px 2px rgba(0,0,0,0.25), 0 6px 18px rgba(0,0,0,0.3);
+    --high: #E28A79;
+    --med: #D8B36B;
+    --low: #86A6B8;
+  }
+
+  *{ box-sizing: border-box; }
+  *:focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
+  html{ scroll-behavior: smooth; }
+
+  html, body{
+    margin: 0; padding: 0; min-height: 100%;
+    background-color: var(--bg);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 15px; line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body{
+    background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 31px, var(--paper-line) 31px, var(--paper-line) 32px);
+  }
+
+  h1,h2,h3,.serif{ font-family: 'Fraunces', serif; }
+  .mono{ font-family: 'IBM Plex Mono', monospace; }
+  button,input,textarea,select{ font-family: inherit; font-size: inherit; color: inherit; }
+  button{ touch-action: manipulation; }
+  a{ color: var(--accent); }
+  p{ margin: 0 0 .6em 0; }
+  .hidden{ display: none !important; }
+  .sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+  ::-webkit-scrollbar{ width:10px; height:10px; }
+  ::-webkit-scrollbar-thumb{ background: var(--line); border-radius:6px; }
+  @media (prefers-reduced-motion: reduce){ *{ animation-duration:.001ms !important; transition-duration:.001ms !important; } }
+
+  @keyframes fadeSlideUp{ from{ opacity:0; transform: translateY(6px);} to{ opacity:1; transform:none; } }
+  @keyframes popIn{ from{ opacity:0; transform: scale(.97) translateY(4px);} to{ opacity:1; transform:none; } }
+  @keyframes checkPulse{ 0%{ transform:scale(1);} 40%{ transform:scale(1.25);} 100%{ transform:scale(1);} }
+  @keyframes toastIn{ from{ opacity:0; transform: translateY(8px);} to{ opacity:1; transform:none; } }
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+
+  /* ---------- LOGIN ---------- */
+  #view-login{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .login-box{ width:100%; max-width:380px; text-align:center; animation: fadeSlideUp .4s ease; }
+  .wordmark{ font-size:44px; font-weight:600; letter-spacing:-0.01em; margin:0 0 6px 0; }
+  .tagline{ font-style:italic; color:var(--muted); margin:0 0 30px 0; font-size:15px; }
+  .field-label{ display:block; text-align:left; font-size:13px; color:var(--muted); margin-bottom:6px; }
+  #view-login input[type="text"], #view-login input[type="email"], #view-login input[type="password"]{ width:100%; padding:10px 4px; border:none; border-bottom:1.5px solid var(--ink); background:transparent; outline:none; margin-bottom:18px; text-align:left; }
+  #view-login input:focus{ border-bottom-color: var(--accent); }
+  .btn-primary{ display:inline-flex; align-items:center; justify-content:center; gap:6px; width:100%; background:var(--ink); color:var(--bg); border:none; padding:12px 20px; border-radius:var(--radius-sm); cursor:pointer; letter-spacing:.01em; transition: background .15s ease, transform .1s ease; }
+  .btn-primary:hover{ background:var(--accent); }
+  .btn-primary:active{ transform: scale(.98); }
+  .btn-primary:disabled{ opacity:.6; cursor:default; }
+  :root[data-theme="dark"] .btn-primary{ background:var(--accent); color:var(--accent-ink); }
+  :root[data-theme="dark"] .btn-primary:hover{ background:#5CAB93; }
+  .login-note{ margin-top:16px; font-size:12.5px; color:var(--muted); min-height:16px; }
+  .login-note.error{ color:var(--overdue); }
+  .login-demo{ margin-top:10px; }
+  .btn-link{ background:none; border:none; color:var(--muted); text-decoration:underline; cursor:pointer; font-size:13px; padding:4px; }
+  .btn-link:hover{ color:var(--accent); }
+  .auth-tabs{ display:flex; gap:4px; background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius); padding:3px; margin-bottom:26px; }
+  .auth-tab{ flex:1; border:none; background:none; padding:8px 0; border-radius:6px; cursor:pointer; color:var(--muted); font-size:13.5px; font-family:inherit; transition:background .15s ease, color .15s ease; }
+  .auth-tab.active{ background:var(--ink); color:var(--bg); }
+  :root[data-theme="dark"] .auth-tab.active{ background:var(--accent); color:var(--accent-ink); }
+  .auth-panel{ display:none; }
+  .auth-panel.active{ display:block; animation: fadeSlideUp .3s ease; }
+
+  /* ---------- APP SHELL ---------- */
+  #app-shell{ display:flex; min-height:100vh; }
+
+  .sidebar{
+    flex: 0 0 220px; width:220px; background: var(--paper); border-right:1px solid var(--line);
+    display:flex; flex-direction:column; padding: 22px 14px; position: sticky; top:0; height:100vh; overflow-y:auto;
+    transition: transform .2s ease;
+  }
+  .sidebar-top{ display:flex; align-items:center; justify-content:space-between; padding: 0 8px 22px 8px; }
+  .wordmark-sm{ font-family:'Fraunces',serif; font-size:22px; font-weight:600; }
+  .nav-list{ display:flex; flex-direction:column; gap:2px; flex:1; }
+  .nav-item{
+    display:flex; align-items:center; gap:10px; text-align:left; background:none; border:none; cursor:pointer;
+    padding:9px 10px; border-radius:var(--radius-sm); color:var(--muted); font-size:14px; border-left:2px solid transparent;
+    transition: background .12s ease, color .12s ease;
+  }
+  .nav-item .nav-ic{ width:18px; text-align:center; font-size:14px; }
+  .nav-item:hover{ background: var(--accent-soft); color:var(--ink); }
+  .nav-item.active{ color:var(--ink); border-left-color:var(--accent); background:var(--accent-soft); font-weight:500; }
+  .nav-item .nav-badge{ margin-left:auto; font-size:11px; background:var(--overdue); color:#fff; border-radius:10px; padding:1px 6px; }
+  .sidebar-bottom{ padding-top:14px; border-top:1px solid var(--line); margin-top:10px; }
+  .sidebar-bottom .btn-primary{ padding:10px; font-size:13.5px; }
+
+  .main-col{ flex:1; min-width:0; display:flex; flex-direction:column; }
+  .topbar{
+    display:flex; align-items:center; gap:12px; padding:14px 22px; border-bottom:1px solid var(--line);
+    background: var(--bg); position: sticky; top:0; z-index:20;
+  }
+  .search-trigger{
+    flex:1; max-width:420px; text-align:left; background:var(--card-bg); border:1px solid var(--card-border);
+    border-radius:var(--radius-sm); padding:8px 12px; color:var(--muted); cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:8px;
+  }
+  .search-trigger:hover{ border-color:var(--accent); }
+  .kbd{ font-family:'IBM Plex Mono',monospace; font-size:11px; background:var(--line); padding:1px 6px; border-radius:3px; color:var(--muted); }
+  .topbar-right{ margin-left:auto; display:flex; align-items:center; gap:10px; }
+  .who-name{ font-size:13px; font-weight:600; }
+  .mobile-only{ display:none; }
+  .btn-icon{ background:none; border:none; cursor:pointer; font-size:18px; padding:6px; line-height:1; border-radius:var(--radius-sm); color: var(--ink); }
+  .btn-icon:hover{ background: var(--accent-soft); }
+
+  .view-scroll{ flex:1; overflow-y:auto; }
+  .view{ max-width:920px; margin:0 auto; padding: 30px 28px 90px 28px; animation: fadeSlideUp .25s ease; }
+  .view-header{ display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:22px; flex-wrap:wrap; }
+  .view-title{ font-size:26px; font-weight:600; margin:0 0 4px 0; }
+  .view-sub{ color:var(--muted); font-size:13.5px; margin:0; }
+  .view-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+
+  .btn-secondary{ background:transparent; color:var(--ink); border:1px solid var(--ink); padding:8px 16px; border-radius:var(--radius-sm); cursor:pointer; white-space:nowrap; transition: background .12s ease, color .12s ease; }
+  .btn-secondary:hover{ background:var(--ink); color:var(--bg); }
+  .btn-danger{ background:transparent; color:var(--overdue); border:1px solid var(--overdue); padding:8px 16px; border-radius:var(--radius-sm); cursor:pointer; }
+  .btn-danger:hover{ background:var(--overdue); color:#fff; }
+  .btn-sm{ padding:5px 11px; font-size:12.5px; }
+  .btn-ghost{ background:none; border:none; color:var(--muted); cursor:pointer; padding:6px 8px; border-radius:var(--radius-sm); font-size:13px; }
+  .btn-ghost:hover{ color:var(--accent); background:var(--accent-soft); }
+
+  /* dashboard grid */
+  .grid-2{ display:grid; grid-template-columns:1.3fr 1fr; gap:18px; }
+  .grid-stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:22px; }
+  .stat-card{ background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius); padding:14px 16px; box-shadow:var(--shadow); }
+  .stat-num{ font-family:'Fraunces',serif; font-size:26px; font-weight:600; line-height:1; }
+  .stat-label{ color:var(--muted); font-size:12px; margin-top:4px; }
+
+  .card{ background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius); padding:18px 20px; box-shadow:var(--shadow); margin-bottom:18px; }
+  .card-title{ font-family:'Fraunces',serif; font-size:16px; font-weight:600; margin:0 0 12px 0; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .card-title small{ font-family:'IBM Plex Sans',sans-serif; font-weight:400; color:var(--muted); font-size:12px; }
+
+  .greeting{ font-size:22px; margin:0 0 2px 0; }
+  .greeting-date{ color:var(--muted); font-size:13.5px; margin:0 0 24px 0; }
+
+  .next-item{ display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid var(--line); }
+  .next-item:last-child{ border-bottom:none; }
+  .next-rank{ font-family:'Fraunces',serif; font-style:italic; color:var(--faint); font-size:15px; width:16px; flex:none; padding-top:1px; }
+  .next-body{ flex:1; min-width:0; }
+  .next-title{ font-weight:500; }
+  .next-reason{ color:var(--muted); font-size:12.5px; margin-top:2px; }
+
+  .schedule-row{ display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid var(--line); font-size:13.5px; }
+  .schedule-row:last-child{ border-bottom:none; }
+  .schedule-time{ color:var(--muted); width:64px; flex:none; font-size:12.5px; }
+  .class-dot{ width:8px; height:8px; border-radius:50%; flex:none; }
+
+  /* badges */
+  .badge{ display:inline-flex; align-items:center; gap:4px; font-size:11px; padding:2px 8px; border-radius:20px; border:1px solid var(--card-border); color:var(--muted); white-space:nowrap; }
+  .badge-priority-high{ color:var(--high); border-color: var(--high); }
+  .badge-priority-medium{ color:var(--med); border-color: var(--med); }
+  .badge-priority-low{ color:var(--low); border-color: var(--low); }
+  .badge-status{ background:var(--accent-soft); color:var(--accent); border-color:transparent; }
+  .badge-overdue{ background:var(--overdue-bg); color:var(--overdue); border-color:transparent; }
+  .badge-type{ font-family:'IBM Plex Mono',monospace; }
+  .priority-dot{ width:7px; height:7px; border-radius:50%; display:inline-block; flex:none; }
+  .priority-dot.high{ background:var(--high); }
+  .priority-dot.medium{ background:var(--med); }
+  .priority-dot.low{ background:var(--low); }
+
+  /* assignment rows */
+  .add-row{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:22px; align-items:center; }
+  .add-row input[type="text"], .add-row input[type="date"]{
+    background:transparent; border:none; border-bottom:1px solid var(--line); padding:8px 2px; outline:none;
+  }
+  .add-row input:focus{ border-bottom-color: var(--accent); }
+  #quickTitleInput{ flex:1 1 220px; min-width:160px; }
+  #quickDueInput{ flex:0 0 150px; color:var(--muted); }
+  .btn-add{ background:var(--accent); color:var(--accent-ink); border:none; padding:8px 18px; border-radius:var(--radius-sm); cursor:pointer; white-space:nowrap; }
+  .btn-add:hover{ filter:brightness(1.08); }
+
+  .toolbar{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:18px; }
+  .toolbar select, .toolbar input[type="text"]{
+    background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius-sm); padding:7px 10px; outline:none;
+  }
+  .toolbar select:focus, .toolbar input:focus{ border-color:var(--accent); }
+
+  .tabs{ display:flex; gap:22px; border-bottom:1px solid var(--line); margin-bottom:20px; overflow-x:auto; }
+  .tab{ background:none; border:none; padding:0 0 10px 0; font-size:14px; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; white-space:nowrap; }
+  .tab.active{ color:var(--ink); border-bottom-color:var(--accent); }
+
+  .group{ margin-bottom:26px; }
+  .group-title{ font-style:italic; font-size:15.5px; color:var(--ink); margin:0 0 8px 0; display:flex; align-items:center; gap:8px; }
+  .group-title.overdue{ color:var(--overdue); }
+  .group-count{ color:var(--faint); font-style:normal; font-size:12px; }
+
+  .task-row{ display:flex; align-items:flex-start; gap:12px; padding:10px 10px; margin:0 -10px; border-radius:var(--radius-sm); transition: background .1s ease; cursor:pointer; }
+  .task-row:hover{ background: var(--card-bg); }
+  .task-row.overdue-row{ background: var(--overdue-bg); }
+  .task-row.overdue-row:hover{ filter:brightness(0.98); }
+
+  .checkbox{ flex:0 0 auto; width:18px; height:18px; margin-top:2px; border:1.5px solid var(--ink); border-radius:4px; cursor:pointer; position:relative; background:transparent; }
+  .checkbox.checked{ background:var(--accent); border-color:var(--accent); animation: checkPulse .25s ease; }
+  .checkbox.checked::after{ content:''; position:absolute; left:5px; top:2px; width:5px; height:9px; border-right:2px solid #fff; border-bottom:2px solid #fff; transform:rotate(40deg); }
+  .checkbox:disabled{ opacity:.4; cursor:default; }
+
+  .task-body{ flex:1; min-width:0; }
+  .task-top{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+  .task-title{ font-size:15px; }
+  .task-title.done{ color:var(--done); text-decoration:line-through; }
+  .task-meta{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; margin-top:4px; font-size:12.5px; color:var(--muted); }
+  .task-subject{ display:inline-flex; align-items:center; gap:6px; }
+  .subject-dot{ width:7px; height:7px; border-radius:50%; display:inline-block; }
+  .task-due{ color:var(--muted); }
+  .task-due.overdue{ color:var(--overdue); font-weight:500; }
+  .task-due.today{ color:var(--accent); font-weight:500; }
+  .progress-mini{ width:60px; height:4px; background:var(--line); border-radius:3px; overflow:hidden; flex:none; }
+  .progress-mini > div{ height:100%; background:var(--accent); }
+  .task-actions{ display:flex; gap:2px; flex:none; align-items:flex-start; }
+  .task-delete{ background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px; padding:4px 6px; border-radius:var(--radius-sm); }
+  .task-delete:hover{ color:var(--overdue); background:var(--overdue-bg); }
+
+  .empty-state{ font-style:italic; color:var(--muted); padding:28px 4px; text-align:center; }
+  .empty-state .btn-secondary{ margin-top:12px; font-style:normal; }
+
+  /* Forms / modal */
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:12.5px; color:var(--muted); margin-bottom:5px; }
+  .field input[type=text], .field input[type=date], .field input[type=time], .field input[type=number],
+  .field input[type=password], .field textarea, .field select{
+    width:100%; background:var(--bg); border:1px solid var(--card-border); border-radius:var(--radius-sm);
+    padding:9px 10px; outline:none;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus{ border-color:var(--accent); }
+  .field textarea{ resize:vertical; min-height:70px; }
+  .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .field-row3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+  .segmented{ display:flex; border:1px solid var(--card-border); border-radius:var(--radius-sm); overflow:hidden; }
+  .segmented button{ flex:1; background:var(--bg); border:none; padding:8px 6px; cursor:pointer; font-size:13px; color:var(--muted); border-right:1px solid var(--card-border); }
+  .segmented button:last-child{ border-right:none; }
+  .segmented button.active{ background:var(--accent); color:var(--accent-ink); }
+
+  .subtask-list{ display:flex; flex-direction:column; gap:6px; margin:8px 0; }
+  .subtask-row{ display:flex; align-items:center; gap:8px; }
+  .subtask-row input[type=text]{ flex:1; background:transparent; border:none; border-bottom:1px solid var(--line); padding:5px 2px; outline:none; }
+  .subtask-row input[type=text].done{ color:var(--done); text-decoration:line-through; }
+  .subtask-add{ display:flex; gap:8px; margin-top:6px; }
+  .subtask-add input{ flex:1; background:transparent; border:none; border-bottom:1px dashed var(--line); padding:5px 2px; outline:none; }
+
+  .tag-input-row{ display:flex; flex-wrap:wrap; gap:6px; padding:6px; border:1px solid var(--card-border); border-radius:var(--radius-sm); background:var(--bg); }
+  .tag-pill{ background:var(--accent-soft); color:var(--accent); font-size:12px; padding:2px 8px; border-radius:12px; display:inline-flex; align-items:center; gap:5px; }
+  .tag-pill button{ background:none; border:none; color:inherit; cursor:pointer; font-size:12px; padding:0; }
+  .tag-input-row input{ border:none; background:none; outline:none; flex:1; min-width:60px; padding:3px; }
+
+  /* Modal shell */
+  .modal-overlay{ position:fixed; inset:0; background:rgba(20,24,20,0.4); backdrop-filter: blur(1.5px); z-index:100; display:flex; align-items:center; justify-content:center; padding:20px; animation: fadeSlideUp .15s ease; }
+  .modal{ background:var(--paper); border-radius:var(--radius); width:100%; max-width:560px; max-height:88vh; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.25); animation: popIn .18s ease; border:1px solid var(--card-border); }
+  .modal.modal-lg{ max-width:760px; }
+  .modal.modal-sm{ max-width:400px; }
+  .modal-header{ display:flex; align-items:center; justify-content:space-between; padding:18px 20px; border-bottom:1px solid var(--line); flex:none; }
+  .modal-header h3{ margin:0; font-size:18px; }
+  .modal-body{ padding:20px; overflow-y:auto; flex:1; }
+  .modal-footer{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:16px 20px; border-top:1px solid var(--line); flex:none; flex-wrap:wrap; }
+  .modal-footer-right{ display:flex; gap:10px; margin-left:auto; }
+
+  /* Toast */
+  .toast-container{ position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:200; display:flex; flex-direction:column; gap:8px; align-items:center; width:100%; max-width:420px; padding:0 16px; }
+  .toast{ background:var(--ink); color:var(--bg); padding:10px 16px; border-radius:var(--radius-sm); font-size:13.5px; box-shadow:0 8px 24px rgba(0,0,0,0.2); animation: toastIn .18s ease; display:flex; align-items:center; gap:10px; width:100%; justify-content:space-between; }
+  .toast.toast-error{ background:var(--overdue); color:#fff; }
+  .toast.toast-success{ background:var(--accent); color:var(--accent-ink); }
+  .toast button{ background:none; border:none; color:inherit; opacity:.7; cursor:pointer; font-size:13px; }
+
+  /* Calendar */
+  .cal-nav{ display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+  .cal-title{ font-family:'Fraunces',serif; font-size:18px; min-width:170px; text-align:center; }
+  .cal-view-toggle{ margin-left:auto; }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:var(--radius-sm); overflow:hidden; }
+  .cal-dow{ background:var(--paper); text-align:center; font-size:11px; color:var(--muted); padding:6px 0; }
+  .cal-cell{ background:var(--paper); min-height:92px; padding:6px; font-size:12px; cursor:pointer; position:relative; transition: background .1s ease; }
+  .cal-cell:hover{ background: var(--accent-soft); }
+  .cal-cell.other-month{ background: var(--bg); color:var(--faint); }
+  .cal-cell.today{ outline:2px solid var(--accent); outline-offset:-2px; }
+  .cal-daynum{ font-weight:600; margin-bottom:4px; }
+  .cal-event{ font-size:10.5px; padding:1px 5px; border-radius:3px; margin-bottom:2px; background:var(--accent-soft); color:var(--accent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
+  .cal-event.overdue-ev{ background:var(--overdue-bg); color:var(--overdue); }
+  .cal-event.exam-ev{ background:var(--high); color:#fff; }
+  .cal-more{ font-size:10px; color:var(--muted); }
+  .cal-week-row .cal-cell{ min-height:160px; }
+  .cal-day-list{ display:flex; flex-direction:column; gap:8px; }
+
+  /* Planner */
+  .planner-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:10px; }
+  .planner-day{ background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius); padding:10px; min-height:220px; display:flex; flex-direction:column; gap:6px; }
+  .planner-day.today-col{ outline:2px solid var(--accent); outline-offset:-2px; }
+  .planner-day-head{ font-weight:600; font-size:13px; display:flex; justify-content:space-between; align-items:center; margin-bottom:2px; }
+  .planner-day-date{ color:var(--muted); font-weight:400; font-size:11.5px; }
+  .planner-item{ background:var(--paper); border:1px solid var(--card-border); border-left:3px solid var(--accent); border-radius:4px; padding:5px 7px; font-size:11.5px; cursor:pointer; }
+  .planner-item.exam-item{ border-left-color:var(--high); }
+  .planner-item.study-item{ border-left-color:var(--low); }
+  .planner-item-time{ color:var(--muted); font-size:10.5px; }
+  .planner-add{ margin-top:auto; background:none; border:1px dashed var(--card-border); border-radius:4px; color:var(--muted); font-size:11.5px; padding:5px; cursor:pointer; }
+  .planner-add:hover{ border-color:var(--accent); color:var(--accent); }
+
+  /* classes */
+  .class-card{ background:var(--card-bg); border:1px solid var(--card-border); border-left:4px solid var(--accent); border-radius:var(--radius); padding:16px 18px; margin-bottom:14px; cursor:pointer; box-shadow:var(--shadow); }
+  .class-card-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .class-name{ font-family:'Fraunces',serif; font-size:17px; font-weight:600; }
+  .class-meta{ color:var(--muted); font-size:12.5px; margin-top:2px; }
+  .class-stats{ display:flex; gap:16px; margin-top:10px; font-size:12.5px; color:var(--muted); }
+
+  .color-swatches{ display:flex; gap:8px; flex-wrap:wrap; }
+  .color-swatch{ width:26px; height:26px; border-radius:50%; cursor:pointer; border:2px solid transparent; }
+  .color-swatch.selected{ border-color:var(--ink); }
+
+  .schedule-editor-row{ display:grid; grid-template-columns: 90px 1fr 1fr auto; gap:8px; align-items:center; margin-bottom:8px; }
+
+  /* exams */
+  .exam-card{ background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius); padding:16px 18px; margin-bottom:14px; box-shadow:var(--shadow); cursor:pointer; }
+  .exam-top{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .exam-countdown{ font-family:'Fraunces',serif; font-weight:600; font-size:15px; color:var(--accent); }
+  .exam-countdown.soon{ color:var(--overdue); }
+
+  /* notes */
+  .note-card{ background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius); padding:14px 16px; margin-bottom:12px; cursor:pointer; box-shadow:var(--shadow); }
+  .note-title{ font-weight:600; margin-bottom:4px; }
+  .note-preview{ color:var(--muted); font-size:13px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+  .note-meta{ font-size:11.5px; color:var(--faint); margin-top:6px; }
+
+  /* stats */
+  .bar-chart-row{ display:flex; align-items:center; gap:10px; margin-bottom:9px; font-size:12.5px; }
+  .bar-chart-label{ width:110px; flex:none; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .bar-chart-track{ flex:1; height:10px; background:var(--line); border-radius:5px; overflow:hidden; }
+  .bar-chart-fill{ height:100%; background:var(--accent); border-radius:5px; transition: width .4s ease; }
+  .bar-chart-val{ width:34px; text-align:right; color:var(--muted); flex:none; }
+
+  .streak-row{ display:flex; align-items:center; gap:14px; }
+  .streak-num{ font-family:'Fraunces',serif; font-size:34px; font-weight:600; color:var(--accent); }
+
+  /* timer */
+  .timer-display{ text-align:center; padding:20px 0; }
+  .timer-clock{ font-family:'IBM Plex Mono',monospace; font-size:52px; font-weight:500; }
+  .timer-controls{ display:flex; gap:10px; justify-content:center; margin-top:16px; }
+
+  /* settings */
+  .settings-section{ margin-bottom:26px; }
+  .settings-section h3{ font-size:15px; margin:0 0 12px 0; }
+  .settings-row{ display:flex; align-items:center; justify-content:space-between; gap:16px; padding:10px 0; border-bottom:1px solid var(--line); }
+  .settings-row:last-child{ border-bottom:none; }
+  .settings-row-label{ font-size:13.5px; }
+  .settings-row-hint{ color:var(--muted); font-size:12px; margin-top:2px; }
+  .switch{ position:relative; width:40px; height:22px; background:var(--line); border-radius:20px; cursor:pointer; border:none; flex:none; }
+  .switch.on{ background:var(--accent); }
+  .switch::after{ content:''; position:absolute; top:2px; left:2px; width:18px; height:18px; background:#fff; border-radius:50%; transition: left .15s ease; }
+  .switch.on::after{ left:20px; }
+
+  /* search modal */
+  .search-input-lg{ width:100%; padding:12px 14px; font-size:16px; border:none; border-bottom:1px solid var(--line); background:transparent; outline:none; }
+  .search-input-lg:focus{ border-bottom-color:var(--accent); }
+  .search-result{ display:flex; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--line); cursor:pointer; }
+  .search-result:hover{ background:var(--accent-soft); }
+  .search-result-type{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; width:70px; flex:none; }
+
+  .canvas-panel{ padding:16px 18px; border:1px solid var(--line); border-radius:var(--radius); background:var(--card-bg); margin-top:10px; }
+  .canvas-panel-hint{ font-size:12.5px; color:var(--muted); margin:0 0 14px 0; line-height:1.5; }
+  .canvas-row{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px; }
+  .canvas-row input{ background:var(--bg); border:1px solid var(--card-border); border-radius:var(--radius-sm); padding:8px 10px; outline:none; }
+  #canvasDomainInput{ flex:1 1 200px; }
+  #canvasTokenInput{ flex:1 1 220px; }
+  .canvas-status{ font-size:12.5px; color:var(--muted); margin-top:8px; line-height:1.5; }
+
+  .activity-row{ display:flex; gap:10px; align-items:baseline; font-size:12.5px; padding:6px 0; border-bottom:1px solid var(--line); color:var(--muted); }
+  .activity-row:last-child{ border-bottom:none; }
+  .activity-time{ color:var(--faint); flex:none; width:54px; }
+
+  .wizard-steps{ display:flex; gap:6px; margin-bottom:18px; }
+  .wizard-dot{ flex:1; height:4px; background:var(--line); border-radius:2px; }
+  .wizard-dot.done, .wizard-dot.active{ background:var(--accent); }
+
+  .loading-msg{ text-align:center; color:var(--muted); font-style:italic; padding-top:60px; }
+
+  /* mobile */
+  @media (max-width: 880px){
+    .grid-2{ grid-template-columns:1fr; }
+    .grid-stats{ grid-template-columns:repeat(2,1fr); }
+    .planner-grid{ grid-template-columns:repeat(1,1fr); }
+  }
+  @media (max-width: 760px){
+    .mobile-only{ display:inline-flex; }
+    .sidebar{ position:fixed; left:0; top:0; z-index:90; transform: translateX(-100%); box-shadow:0 0 30px rgba(0,0,0,0.25); }
+    .sidebar.open{ transform:translateX(0); }
+    .view{ padding: 20px 16px 90px 16px; }
+    .topbar{ padding:12px 14px; }
+    .search-trigger .kbd{ display:none; }
+    .grid-stats{ grid-template-columns:repeat(2,1fr); }
+    .field-row, .field-row3{ grid-template-columns:1fr; }
+    .modal{ max-width:100%; width:100%; max-height:100%; height:100%; border-radius:0; }
+    .modal-overlay{ padding:0; align-items:stretch; }
+    .cal-cell{ min-height:60px; font-size:10.5px; }
+    .cal-daynum{ font-size:11px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ================= LOGIN ================= -->
+  <div id="view-login">
+    <div class="login-box">
+      <h1 class="wordmark">Docket</h1>
+      <p class="tagline">everything that's due, in one ruled page</p>
+
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" id="tabLogin">Log in</button>
+        <button type="button" class="auth-tab" id="tabSignup">Sign up</button>
+      </div>
+
+      <!-- LOG IN -->
+      <form class="auth-panel active" id="panelLogin" autocomplete="on">
+        <label class="field-label" for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="username" required>
+        <label class="field-label" for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="current-password" required>
+        <button type="submit" class="btn-primary" id="loginBtn">Log in</button>
+      </form>
+
+      <!-- SIGN UP -->
+      <form class="auth-panel" id="panelSignup" autocomplete="on">
+        <label class="field-label" for="signupName">Your name</label>
+        <input type="text" id="signupName" placeholder="e.g. Colin" autocomplete="name" required>
+        <label class="field-label" for="signupEmail">Email</label>
+        <input type="email" id="signupEmail" placeholder="you@example.com" autocomplete="username" required>
+        <label class="field-label" for="signupPassword">Password</label>
+        <input type="password" id="signupPassword" placeholder="at least 8 characters" autocomplete="new-password" minlength="8" required>
+        <label class="field-label" for="signupPassword2">Confirm password</label>
+        <input type="password" id="signupPassword2" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="new-password" minlength="8" required>
+        <button type="submit" class="btn-primary" id="signupBtn">Create account</button>
+      </form>
+
+      <p class="login-note" id="loginNote">&nbsp;</p>
+      <div class="login-demo">
+        <button class="btn-link" id="demoBtn">or try it with demo data (no account needed)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= APP SHELL ================= -->
+  <div id="app-shell" class="hidden">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-top">
+        <span class="wordmark-sm">Docket</span>
+        <button class="btn-icon mobile-only" id="sidebarCloseBtn" aria-label="Close menu">&times;</button>
+      </div>
+      <nav class="nav-list" id="navList">
+        <button class="nav-item" data-view="dashboard"><span class="nav-ic">&#9679;</span> Home</button>
+        <button class="nav-item" data-view="today"><span class="nav-ic">&#9737;</span> Today</button>
+        <button class="nav-item" data-view="assignments"><span class="nav-ic">&#9776;</span> Assignments</button>
+        <button class="nav-item" data-view="calendar"><span class="nav-ic">&#9633;</span> Calendar</button>
+        <button class="nav-item" data-view="planner"><span class="nav-ic">&#9782;</span> Weekly Planner</button>
+        <button class="nav-item" data-view="classes"><span class="nav-ic">&#9998;</span> Classes</button>
+        <button class="nav-item" data-view="exams"><span class="nav-ic">&#9888;</span> Exams</button>
+        <button class="nav-item" data-view="notes"><span class="nav-ic">&#9997;</span> Notes</button>
+        <button class="nav-item" data-view="stats"><span class="nav-ic">&#9713;</span> Insights</button>
+        <button class="nav-item" data-view="settings"><span class="nav-ic">&#9881;</span> Settings</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <button class="btn-primary" id="sidebarAddBtn">+ New assignment</button>
+      </div>
+    </aside>
+
+    <div class="main-col">
+      <header class="topbar">
+        <button class="btn-icon mobile-only" id="menuBtn" aria-label="Open menu">&#9776;</button>
+        <button class="search-trigger" id="searchBtn">
+          <span>&#128269; Search assignments, classes, notes&hellip;</span>
+          <span class="kbd">&#8984;K</span>
+        </button>
+        <div class="topbar-right">
+          <span class="who-name" id="whoName"></span>
+          <button class="btn-ghost" id="switchBtn">Log out</button>
+        </div>
+      </header>
+
+      <main class="view-scroll" id="mainContent">
+        <section id="view-dashboard" class="view"></section>
+        <section id="view-today" class="view hidden"></section>
+        <section id="view-assignments" class="view hidden"></section>
+        <section id="view-calendar" class="view hidden"></section>
+        <section id="view-planner" class="view hidden"></section>
+        <section id="view-classes" class="view hidden"></section>
+        <section id="view-exams" class="view hidden"></section>
+        <section id="view-notes" class="view hidden"></section>
+        <section id="view-stats" class="view hidden"></section>
+        <section id="view-settings" class="view hidden"></section>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal-overlay hidden" id="modalOverlay">
+    <div class="modal" id="modalShell" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <h3 id="modalTitle">&nbsp;</h3>
+        <button class="btn-icon" id="modalCloseBtn" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer" id="modalFooter"></div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+  <input type="file" id="importFileInput" accept="application/json" class="hidden">
+
+<!-- Supabase client (auth + database). Docket's backend is Supabase, not Cloudflare —
+     see supabase-config.js for the two values you need to fill in after creating
+     your Supabase project. -->
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+(function(){
+  'use strict';
+  /* =========================================================
+     DOCKET v2 — data layer, utilities, and app logic
+     ========================================================= */
+
+  const STORAGE_PREFIX = 'docket';
+  const SCHEMA_VERSION = 2;
+  const ASSIGN_TYPES = ['homework','quiz','test','project','essay','lab','reading','other'];
+  const CLASS_COLORS = ['#2F6F62','#B08A3E','#7A5C7E','#52697A','#A15C43','#3D6EA8','#8A6D3B','#5C7A5A'];
+
+  let currentUser = null;      // display name (string) — used throughout the UI/templates
+  let currentAccount = null;   // { id, name, email } for the signed-in account, or null in demo mode
+  let isDemoMode = false;
+  let state = null;
+  let ui = { view:'dashboard', assignFilter:{status:'all', subject:'', priority:'', type:'', tag:'', sort:'due'}, calDate: new Date(), calView:'month', plannerWeekOffset:0, editingAssignmentId:null, editingClassId:null, editingExamId:null, editingNoteId:null, timer:null, sidebarOpen:false };
+
+  /* ---------- storage ----------
+     Signed-in accounts persist to the backend (D1 via Cloudflare Pages Functions),
+     with a localStorage mirror per-user for instant loads/offline resilience.
+     Demo mode never talks to the backend — it's local-only, like before. */
+  const Store = {
+    get(key){ try{ const raw = localStorage.getItem(key); return raw === null ? null : { value: raw }; }catch(e){ return null; } },
+    set(key, value){ try{ localStorage.setItem(key, value); return true; }catch(e){ return false; } },
+    remove(key){ try{ localStorage.removeItem(key); }catch(e){} }
+  };
+
+  function dataKey(user){ return STORAGE_PREFIX + ':data:v2:' + user.toLowerCase(); }
+  function legacyTaskKey(user){ return STORAGE_PREFIX + ':tasks:' + user.toLowerCase(); }
+  function legacyCanvasKey(user){ return STORAGE_PREFIX + ':canvas:' + user.toLowerCase(); }
+  function lastUserKey(){ return STORAGE_PREFIX + ':lastUser'; }
+  function cacheKey(accountId){ return STORAGE_PREFIX + ':cache:v2:' + accountId; }
+
+  /* ---------- backend API ----------
+     Backed by Supabase (Postgres + Supabase Auth) rather than Cloudflare
+     Pages Functions/D1. This object keeps the exact same external shape
+     (ok/user/error, getState/saveState) the rest of the app already expects,
+     so nothing outside this block needed to change. */
+  const supabaseClient = (window.supabase && window.DOCKET_SUPABASE_URL && window.DOCKET_SUPABASE_URL.indexOf('REPLACE_WITH') !== 0)
+    ? window.supabase.createClient(window.DOCKET_SUPABASE_URL, window.DOCKET_SUPABASE_ANON_KEY)
+    : null;
+
+  function toAccount(user){
+    if(!user) return null;
+    return { id: user.id, name: (user.user_metadata && user.user_metadata.name) || user.email, email: user.email };
+  }
+  function friendlyAuthError(msg){
+    if(!msg) return 'Something went wrong.';
+    if(/already registered|already exists/i.test(msg)) return 'An account with that email already exists.';
+    if(/invalid login credentials/i.test(msg)) return 'Incorrect email or password.';
+    if(/email not confirmed/i.test(msg)) return 'Check your inbox to confirm your email before logging in.';
+    if(/password should be at least/i.test(msg)) return 'Password must be at least 8 characters.';
+    return msg;
+  }
+
+  const Api = {
+    _needsConfig(){
+      return !supabaseClient;
+    },
+    async signup(name, email, password){
+      if(this._needsConfig()) return { ok:false, error:'Docket isn\u2019t connected to Supabase yet — see supabase-config.js.' };
+      const { data, error } = await supabaseClient.auth.signUp({
+        email, password, options: { data: { name } }
+      });
+      if(error) return { ok:false, error: friendlyAuthError(error.message) };
+      if(!data.session){
+        // Email confirmation is turned on for this project — there's no
+        // session yet, so tell the person to confirm before we can log them in.
+        return { ok:false, error:'Account created — check your email to confirm it, then log in.' };
+      }
+      return { ok:true, user: toAccount(data.user) };
+    },
+    async login(email, password){
+      if(this._needsConfig()) return { ok:false, error:'Docket isn\u2019t connected to Supabase yet — see supabase-config.js.' };
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if(error) return { ok:false, error: friendlyAuthError(error.message) };
+      return { ok:true, user: toAccount(data.user) };
+    },
+    async logout(){
+      if(this._needsConfig()) return;
+      try{ await supabaseClient.auth.signOut(); }catch(e){}
+    },
+    async me(){
+      if(this._needsConfig()) return null;
+      try{
+        const { data } = await supabaseClient.auth.getSession();
+        const user = data && data.session && data.session.user;
+        return toAccount(user);
+      }catch(e){ return null; }
+    },
+    async getState(){
+      if(this._needsConfig()) throw new Error('not_configured');
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+      const user = sessionData && sessionData.session && sessionData.session.user;
+      if(!user) throw new Error('state_fetch_failed');
+      const { data, error } = await supabaseClient
+        .from('docket_state').select('data').eq('user_id', user.id).maybeSingle();
+      if(error) throw new Error('state_fetch_failed');
+      return (data && data.data) || null;
+    },
+    async saveState(stateObj){
+      if(this._needsConfig()) return false;
+      try{
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        const user = sessionData && sessionData.session && sessionData.session.user;
+        if(!user) return false;
+        await supabaseClient.from('docket_state').upsert({
+          user_id: user.id, data: stateObj, updated_at: new Date().toISOString()
+        });
+        return true;
+      }catch(e){ return false; }
+    },
+    async changePassword(currentPassword, newPassword){
+      if(this._needsConfig()) return { ok:false, error:'Docket isn\u2019t connected to Supabase yet — see supabase-config.js.' };
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+      const email = sessionData && sessionData.session && sessionData.session.user && sessionData.session.user.email;
+      if(!email) return { ok:false, error:'You need to be logged in.' };
+      // Supabase's updateUser() doesn't ask for the current password itself,
+      // so re-authenticate with it first to confirm it's really the account owner.
+      const check = await supabaseClient.auth.signInWithPassword({ email, password: currentPassword });
+      if(check.error) return { ok:false, error:'Current password is incorrect.' };
+      const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+      if(error) return { ok:false, error: friendlyAuthError(error.message) };
+      return { ok:true };
+    }
+  };
+
+  /* ---------- utils ---------- */
+  function uid(){ return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8); }
+  function escapeHtml(str){ return String(str==null?'':str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
+  function byId(id){ return document.getElementById(id); }
+  function qs(sel, root){ return (root||document).querySelector(sel); }
+  function qsa(sel, root){ return Array.from((root||document).querySelectorAll(sel)); }
+
+  function pad2(n){ return String(n).padStart(2,'0'); }
+  function fmtISO(d){ return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); }
+  function todayDate(){ const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+  function todayISO(){ return fmtISO(todayDate()); }
+  function parseISO(iso){
+    if(!iso || typeof iso !== 'string') return null;
+    const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(!m) return null;
+    const d = new Date(Number(m[1]), Number(m[2])-1, Number(m[3]));
+    if(isNaN(d.getTime())) return null;
+    return d;
+  }
+  function addDays(d, n){ const r = new Date(d); r.setDate(r.getDate()+n); return r; }
+  function daysBetweenISO(isoA, isoB){
+    const a = parseISO(isoA), b = parseISO(isoB);
+    if(!a || !b) return null;
+    return Math.round((b - a) / 86400000);
+  }
+  function weekdayName(iso){ const d = parseISO(iso); return d ? d.toLocaleDateString(undefined,{weekday:'long'}) : ''; }
+  function shortDate(iso){ const d = parseISO(iso); return d ? d.toLocaleDateString(undefined,{month:'short', day:'numeric'}) : ''; }
+  function monthYear(d){ return d.toLocaleDateString(undefined,{month:'long', year:'numeric'}); }
+  function fmtTime12(t){
+    if(!t) return '';
+    const [h,m] = t.split(':').map(Number);
+    const period = h >= 12 ? 'PM' : 'AM';
+    const h12 = ((h % 12) || 12);
+    return h12 + ':' + pad2(m) + ' ' + period;
+  }
+  function nowHM(){ const d = new Date(); return pad2(d.getHours()) + ':' + pad2(d.getMinutes()); }
+
+  function dueLabel(iso){
+    if(!iso) return '';
+    const diff = daysBetweenISO(todayISO(), iso);
+    if(diff === null) return '';
+    if(diff < 0) return Math.abs(diff) + (Math.abs(diff)===1 ? ' day overdue' : ' days overdue');
+    if(diff === 0) return 'Due today';
+    if(diff === 1) return 'Due tomorrow';
+    if(diff <= 6) return 'Due ' + weekdayName(iso);
+    return 'Due ' + shortDate(iso);
+  }
+  function dueLabelShort(iso){
+    if(!iso) return '';
+    const diff = daysBetweenISO(todayISO(), iso);
+    if(diff === null) return '';
+    if(diff < 0) return Math.abs(diff) + 'd overdue';
+    if(diff === 0) return 'today';
+    if(diff === 1) return 'tomorrow';
+    if(diff <= 6) return weekdayName(iso);
+    return shortDate(iso);
+  }
+  function examCountdown(iso){
+    const diff = daysBetweenISO(todayISO(), iso);
+    if(diff === null) return '';
+    if(diff < 0) return 'Passed';
+    if(diff === 0) return 'Today';
+    if(diff === 1) return 'Tomorrow';
+    return diff + ' days';
+  }
+
+  /* ---------- default state / migration ---------- */
+  function defaultState(user){
+    return {
+      version: SCHEMA_VERSION,
+      user,
+      assignments: [],
+      classes: [],
+      exams: [],
+      notes: [],
+      studySessions: [],
+      activity: [],
+      planMyDay: null,
+      settings: {
+        theme: 'system',
+        accent: 'green',
+        defaultDuration: 30,
+        weekStart: 1,
+        defaultCalendarView: 'month',
+        notifications: false,
+        canvas: { domain:'', token:'', lastSynced:null, connected:false }
+      },
+      ui: { onboarded: false, demo:false }
+    };
+  }
+
+  function migrateLegacy(user){
+    const s = defaultState(user);
+    const legacy = Store.get(legacyTaskKey(user));
+    if(legacy){
+      try{
+        const oldTasks = JSON.parse(legacy.value);
+        if(Array.isArray(oldTasks)){
+          oldTasks.forEach(t => {
+            s.assignments.push({
+              id: t.id || uid(),
+              title: t.title || 'Untitled',
+              subject: t.subject || '',
+              classId: null,
+              due: t.due || '',
+              dueTime: '',
+              priority: 'medium',
+              estimate: null,
+              description: '',
+              type: 'homework',
+              status: t.done ? 'completed' : 'not-started',
+              progress: t.done ? 100 : 0,
+              grade: '',
+              tags: [],
+              subtasks: [],
+              created: t.createdAt || Date.now(),
+              modified: Date.now(),
+              source: t.fromCanvas ? 'canvas' : 'manual',
+              canvasId: t.fromCanvas ? t.id : null,
+              archived: false
+            });
+          });
+        }
+      }catch(e){ /* ignore malformed legacy data */ }
+    }
+    const legacyCanvas = Store.get(legacyCanvasKey(user));
+    if(legacyCanvas){
+      try{
+        const creds = JSON.parse(legacyCanvas.value);
+        s.settings.canvas.domain = creds.domain || '';
+        s.settings.canvas.token = creds.token || '';
+        s.settings.canvas.connected = !!(creds.domain && creds.token);
+      }catch(e){}
+    }
+    s.ui.onboarded = true; // returning user — skip the setup wizard
+    return s;
+  }
+
+  function migrateState(s){
+    if(!s.version || s.version < 2){
+      s.version = 2;
+      s.studySessions = s.studySessions || [];
+      s.exams = s.exams || [];
+      s.notes = s.notes || [];
+      s.classes = s.classes || [];
+      s.activity = s.activity || [];
+      s.planMyDay = s.planMyDay || null;
+      s.settings = s.settings || defaultState(s.user).settings;
+      s.ui = s.ui || { onboarded:true, demo:false };
+    }
+    // defensive fills for anything missing/corrupt
+    s.assignments = Array.isArray(s.assignments) ? s.assignments.filter(a => a && typeof a === 'object') : [];
+    s.assignments.forEach(a => {
+      if(!a.id) a.id = uid();
+      if(!a.status) a.status = a.done ? 'completed' : 'not-started';
+      if(typeof a.progress !== 'number') a.progress = a.status==='completed' ? 100 : 0;
+      if(!a.priority) a.priority = 'medium';
+      if(!a.type || ASSIGN_TYPES.indexOf(a.type) === -1) a.type = 'homework';
+      if(!Array.isArray(a.subtasks)) a.subtasks = [];
+      if(!Array.isArray(a.tags)) a.tags = [];
+      if(!a.source) a.source = 'manual';
+      if(typeof a.archived !== 'boolean') a.archived = false;
+      if(!a.created) a.created = Date.now();
+    });
+    if(!s.settings.canvas) s.settings.canvas = { domain:'', token:'', lastSynced:null, connected:false };
+    if(!s.settings.weekStart && s.settings.weekStart !== 0) s.settings.weekStart = 1;
+    if(!s.settings.defaultDuration) s.settings.defaultDuration = 30;
+    return s;
+  }
+
+  function loadLocalState(user){
+    const r = Store.get(dataKey(user));
+    if(r){
+      try{
+        let parsed = JSON.parse(r.value);
+        return migrateState(parsed);
+      }catch(e){
+        return migrateLegacy(user);
+      }
+    }
+    return migrateLegacy(user);
+  }
+
+  // Loads state for a signed-in account: tries the backend first (source of
+  // truth), falls back to the local cache if offline, migrates either way.
+  async function loadAccountState(account){
+    const cache = Store.get(cacheKey(account.id));
+    try{
+      const remote = await Api.getState();
+      if(remote){
+        const migrated = migrateState(remote);
+        Store.set(cacheKey(account.id), JSON.stringify(migrated));
+        return migrated;
+      }
+    }catch(e){
+      if(cache){
+        try{ return migrateState(JSON.parse(cache.value)); }catch(e2){}
+      }
+      toast("Couldn't reach the server — showing your last saved data.", 'error');
+    }
+    // Brand-new account with nothing saved yet
+    return defaultState(account.name);
+  }
+
+  let saveDebounceTimer = null;
+  function saveState(){
+    if(!currentUser) return;
+    if(isDemoMode){
+      Store.set(dataKey(currentUser), JSON.stringify(state));
+      return;
+    }
+    if(!currentAccount) return;
+    // Write-through local cache immediately for snappy reloads...
+    Store.set(cacheKey(currentAccount.id), JSON.stringify(state));
+    // ...and debounce the network save so rapid edits don't spam the API.
+    clearTimeout(saveDebounceTimer);
+    saveDebounceTimer = setTimeout(() => { Api.saveState(state); }, 500);
+  }
+
+  function logActivity(type, text){
+    state.activity.unshift({ id: uid(), type, text, ts: Date.now() });
+    if(state.activity.length > 60) state.activity.length = 60;
+  }
+
+  /* ---------- classes lookup ---------- */
+  function getClass(id){ return state.classes.find(c => c.id === id) || null; }
+  function classForAssignment(a){
+    if(a.classId) return getClass(a.classId);
+    if(a.subject){ return state.classes.find(c => c.name.toLowerCase() === a.subject.toLowerCase()) || null; }
+    return null;
+  }
+  function subjectLabel(a){
+    const c = classForAssignment(a);
+    if(c) return c.name;
+    return a.subject || '';
+  }
+  function subjectColorFor(a){
+    const c = classForAssignment(a);
+    if(c && c.color) return c.color;
+    return subjectColorHash(a.subject || subjectLabel(a));
+  }
+  function subjectColorHash(subject){
+    if(!subject) return '#B7B4A8';
+    let hash = 0;
+    for(let i=0;i<subject.length;i++){ hash = subject.charCodeAt(i) + ((hash << 5) - hash); }
+    return CLASS_COLORS[Math.abs(hash) % CLASS_COLORS.length];
+  }
+  function linkAssignmentToClass(a){
+    if(a.subject){
+      const match = state.classes.find(c => c.name.toLowerCase() === a.subject.trim().toLowerCase());
+      a.classId = match ? match.id : null;
+    } else {
+      a.classId = null;
+    }
+  }
+
+  /* ---------- assignment helpers ---------- */
+  function isDone(a){ return a.status === 'completed'; }
+  function isOverdue(a){ return a.due && a.due < todayISO() && !isDone(a); }
+  function activeAssignments(){ return state.assignments.filter(a => !a.archived); }
+
+  const PRIORITY_WEIGHT = { high:3, medium:2, low:1 };
+
+  function scoreAssignment(a){
+    let score = 0; const reasons = [];
+    if(isDone(a)) return { score:-999, reasons:['completed'] };
+    if(!a.due){
+      score += 2;
+    } else {
+      const diff = daysBetweenISO(todayISO(), a.due);
+      if(diff < 0){ score += 100 + Math.min(20, -diff); reasons.push((-diff)+' day'+(-diff===1?'':'s')+' overdue'); }
+      else if(diff === 0){ score += 60; reasons.push('due today'); }
+      else if(diff === 1){ score += 45; reasons.push('due tomorrow'); }
+      else if(diff <= 3){ score += 28; reasons.push('due in ' + diff + ' days'); }
+      else if(diff <= 7){ score += 12; reasons.push('due ' + weekdayName(a.due)); }
+    }
+    score += (PRIORITY_WEIGHT[a.priority] || 2) * 8;
+    reasons.push(a.priority + ' priority');
+    if(a.estimate){ reasons.push('estimated ' + a.estimate + ' min'); }
+    if(a.status === 'in-progress'){ score += 4; reasons.push('already in progress'); }
+    return { score, reasons };
+  }
+
+  function whatsNext(limit){
+    const list = activeAssignments().filter(a => !isDone(a)).map(a => ({ a, s: scoreAssignment(a) }));
+    list.sort((x,y) => y.s.score - x.s.score || (x.a.due||'9999').localeCompare(y.a.due||'9999'));
+    return list.slice(0, limit || 3);
+  }
+
+  /* ---------- toast ---------- */
+  function toast(msg, type){
+    const c = byId('toastContainer');
+    const el = document.createElement('div');
+    el.className = 'toast' + (type ? ' toast-' + type : '');
+    el.innerHTML = `<span></span><button aria-label="Dismiss">&times;</button>`;
+    el.querySelector('span').textContent = msg;
+    el.querySelector('button').addEventListener('click', () => el.remove());
+    c.appendChild(el);
+    setTimeout(() => { if(el.parentNode) el.remove(); }, 4200);
+  }
+
+  /* ---------- confirm dialog ---------- */
+  function confirmDialog(message, opts){
+    opts = opts || {};
+    openModal({
+      title: opts.title || 'Are you sure?',
+      bodyHtml: `<p style="margin:0;color:var(--ink);">${escapeHtml(message)}</p>`,
+      footerHtml: `<button class="btn-ghost" id="cdCancel">Cancel</button>
+        <div class="modal-footer-right"><button class="${opts.danger===false?'btn-primary':'btn-danger'}" id="cdConfirm">${escapeHtml(opts.confirmLabel || 'Confirm')}</button></div>`,
+      small: true,
+      onMount(){
+        byId('cdCancel').addEventListener('click', closeModal);
+        byId('cdConfirm').addEventListener('click', () => { closeModal(); if(opts.onConfirm) opts.onConfirm(); });
+      }
+    });
+  }
+
+  /* ---------- generic modal ---------- */
+  function openModal({ title, bodyHtml, footerHtml, onMount, large, small }){
+    const overlay = byId('modalOverlay');
+    const shell = byId('modalShell');
+    byId('modalTitle').textContent = title || '';
+    byId('modalBody').innerHTML = bodyHtml || '';
+    byId('modalFooter').innerHTML = footerHtml || '';
+    shell.classList.toggle('modal-lg', !!large);
+    shell.classList.toggle('modal-sm', !!small);
+    overlay.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    if(onMount) onMount();
+    const focusable = qs('input, textarea, select, button', byId('modalBody'));
+    setTimeout(() => { if(focusable) focusable.focus(); }, 30);
+  }
+  function closeModal(){
+    byId('modalOverlay').classList.add('hidden');
+    document.body.style.overflow = '';
+    if(ui.timer && ui.timer._modalBound){ /* keep timer running in background */ }
+  }
+  byId('modalOverlay').addEventListener('click', (e) => { if(e.target === byId('modalOverlay')) closeModal(); });
+  byId('modalCloseBtn').addEventListener('click', closeModal);
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape'){
+      if(!byId('modalOverlay').classList.contains('hidden')) closeModal();
+    }
+    const meta = e.metaKey || e.ctrlKey;
+    if(meta && e.key.toLowerCase() === 'k'){ e.preventDefault(); if(currentUser) openSearchModal(); }
+    if(meta && e.key.toLowerCase() === 'n'){ e.preventDefault(); if(currentUser) openAssignmentModal(null); }
+  });
+
+  /* =========================================================
+     LOGIN / ONBOARDING
+     ========================================================= */
+  const loginView = byId('view-login');
+  const appShell = byId('app-shell');
+  const loginNote = byId('loginNote');
+
+  function setLoginNote(msg, isError){
+    loginNote.textContent = msg || '\u00a0';
+    loginNote.classList.toggle('error', !!isError);
+  }
+
+  /* ---- tab switching ---- */
+  const tabLogin = byId('tabLogin'), tabSignup = byId('tabSignup');
+  const panelLogin = byId('panelLogin'), panelSignup = byId('panelSignup');
+  function showAuthTab(which){
+    const loginActive = which === 'login';
+    tabLogin.classList.toggle('active', loginActive);
+    tabSignup.classList.toggle('active', !loginActive);
+    panelLogin.classList.toggle('active', loginActive);
+    panelSignup.classList.toggle('active', !loginActive);
+    setLoginNote('');
+  }
+  tabLogin.addEventListener('click', () => showAuthTab('login'));
+  tabSignup.addEventListener('click', () => showAuthTab('signup'));
+
+  /* ---- log in ---- */
+  byId('panelLogin').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = byId('loginEmail').value.trim();
+    const password = byId('loginPassword').value;
+    if(!email || !password){ setLoginNote('Enter your email and password.', true); return; }
+    setBusy(true, 'loginBtn'); setLoginNote('Logging in\u2026');
+    const res = await Api.login(email, password);
+    setBusy(false, 'loginBtn');
+    if(!res.ok){ setLoginNote(res.error, true); return; }
+    await enterAccount(res.user);
+  });
+
+  /* ---- sign up ---- */
+  byId('panelSignup').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = byId('signupName').value.trim();
+    const email = byId('signupEmail').value.trim();
+    const pw1 = byId('signupPassword').value;
+    const pw2 = byId('signupPassword2').value;
+    if(!name || !email || !pw1){ setLoginNote('Fill in every field to continue.', true); return; }
+    if(pw1.length < 8){ setLoginNote('Password must be at least 8 characters.', true); return; }
+    if(pw1 !== pw2){ setLoginNote("Passwords don't match.", true); return; }
+    setBusy(true, 'signupBtn'); setLoginNote('Creating your account\u2026');
+    const res = await Api.signup(name, email, pw1);
+    setBusy(false, 'signupBtn');
+    if(!res.ok){ setLoginNote(res.error, true); return; }
+    await enterAccount(res.user, true);
+  });
+
+  function setBusy(busy, btnId){
+    const btn = byId(btnId);
+    if(btn) btn.disabled = busy;
+  }
+
+  /* ---- demo mode (local-only, no account) ---- */
+  byId('demoBtn').addEventListener('click', () => openDemo());
+
+  async function openDemo(){
+    currentUser = 'Demo Student';
+    currentAccount = null;
+    isDemoMode = true;
+    setLoginNote('Opening\u2026');
+    state = loadLocalState(currentUser);
+    applyTheme();
+    if(!state.assignments.length && !state.ui.demo){ seedDemoData(); }
+    saveState();
+    showApp();
+    if(!state.ui.onboarded){ setTimeout(openWizard, 350); }
+  }
+
+  /* ---- shared entry point once we have an authenticated account ---- */
+  async function enterAccount(account){
+    currentAccount = account;
+    currentUser = account.name;
+    isDemoMode = false;
+    setLoginNote('Opening\u2026');
+    state = await loadAccountState(account);
+    applyTheme();
+    saveState();
+    showApp();
+    if(!state.ui.onboarded){ setTimeout(openWizard, 350); }
+  }
+
+  byId('switchBtn').addEventListener('click', async () => {
+    if(!isDemoMode) await Api.logout();
+    currentUser = null; currentAccount = null; isDemoMode = false; state = null;
+    appShell.classList.add('hidden');
+    loginView.classList.remove('hidden');
+    byId('loginEmail').value = ''; byId('loginPassword').value = '';
+    setLoginNote('');
+    stopTimer(true);
+  });
+
+  function showApp(){
+    loginView.classList.add('hidden');
+    appShell.classList.remove('hidden');
+    byId('whoName').textContent = currentUser;
+    setView('dashboard');
+  }
+
+  /* ---- on page load: is there already a valid session? ---- */
+  async function bootstrapSession(){
+    const account = await Api.me();
+    if(account){
+      await enterAccount(account);
+    }
+  }
+
+  /* ---------- first-run wizard ---------- */
+  function openWizard(){
+    let step = 0;
+    const steps = ['classes','schedule','assignment','canvas','done'];
+    function render(){
+      const s = steps[step];
+      const dots = steps.map((_,i) => `<div class="wizard-dot ${i<step?'done':i===step?'active':''}"></div>`).join('');
+      let body = '';
+      if(s === 'classes'){
+        body = `<p class="view-sub">Let's set up your school. Add a class or two — you can add more anytime from Classes.</p>
+          <div class="field"><label>Class name</label><input type="text" id="wzClassName" placeholder="e.g. Biology"></div>
+          <div class="field-row"><div class="field"><label>Teacher</label><input type="text" id="wzTeacher" placeholder="optional"></div>
+          <div class="field"><label>Room</label><input type="text" id="wzRoom" placeholder="optional"></div></div>
+          <button class="btn-secondary btn-sm" id="wzAddClass">Add class</button>
+          <div id="wzClassList" style="margin-top:14px;"></div>`;
+      } else if(s === 'schedule'){
+        body = `<p class="view-sub">Add your weekly class schedule now, or skip and do it later from a class page.</p>
+          ${state.classes.length ? `
+          <div class="field-row3">
+            <div class="field"><label>Class</label><select id="wzSchedClass">${state.classes.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}</select></div>
+            <div class="field"><label>Day</label><select id="wzSchedDay">${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((d,i)=>`<option value="${i}">${d}</option>`).join('')}</select></div>
+            <div class="field"><label>Start</label><input type="time" id="wzSchedTime" value="09:00"></div>
+          </div>
+          <button class="btn-secondary btn-sm" id="wzAddSched">Add to schedule</button>
+          <div id="wzSchedList" style="margin-top:14px;"></div>` : `<p class="empty-state">Add a class first to build a schedule.</p>`}`;
+      } else if(s === 'assignment'){
+        body = `<p class="view-sub">Add an upcoming assignment so your dashboard has something to show.</p>
+          <div class="field"><label>Title</label><input type="text" id="wzAssignTitle" placeholder="e.g. Chapter 4 problem set"></div>
+          <div class="field-row"><div class="field"><label>Class</label><select id="wzAssignClass"><option value="">None</option>${state.classes.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}</select></div>
+          <div class="field"><label>Due date</label><input type="date" id="wzAssignDue"></div></div>
+          <button class="btn-secondary btn-sm" id="wzAddAssign">Add assignment</button>`;
+      } else if(s === 'canvas'){
+        body = `<p class="view-sub">Optionally connect Canvas to import assignments automatically. You can always do this later in Settings.</p>
+          <div class="field"><label>Canvas domain</label><input type="text" id="wzCanvasDomain" placeholder="yourschool.instructure.com"></div>
+          <div class="field"><label>Access token</label><input type="password" id="wzCanvasToken" placeholder="Access token"></div>
+          <p class="canvas-panel-hint">Generate a token in Canvas under Account &rarr; Settings &rarr; New Access Token. It's stored only in this browser.</p>`;
+      } else {
+        body = `<p style="font-size:16px;">You're all set, ${escapeHtml(currentUser)}. Docket will keep track of what's due, when to study, and what's next.</p>`;
+      }
+      openModal({
+        title: 'Quick setup',
+        bodyHtml: `<div class="wizard-steps">${dots}</div>${body}`,
+        footerHtml: `<button class="btn-ghost" id="wzSkip">Skip setup</button>
+          <div class="modal-footer-right">
+            ${step>0 ? '<button class="btn-secondary" id="wzBack">Back</button>' : ''}
+            <button class="btn-primary" id="wzNext" style="width:auto;">${step===steps.length-1 ? 'Finish' : 'Continue'}</button>
+          </div>`,
+        onMount(){
+          if(s==='classes'){
+            renderWzClassList();
+            byId('wzAddClass').addEventListener('click', () => {
+              const name = byId('wzClassName').value.trim();
+              if(!name) return;
+              state.classes.push({ id:uid(), name, teacher:byId('wzTeacher').value.trim(), room:byId('wzRoom').value.trim(), color: CLASS_COLORS[state.classes.length % CLASS_COLORS.length], schedule:[], notes:'', created:Date.now() });
+              saveState();
+              byId('wzClassName').value=''; byId('wzTeacher').value=''; byId('wzRoom').value='';
+              renderWzClassList();
+            });
+          }
+          if(s==='schedule' && state.classes.length){
+            renderWzSchedList();
+            byId('wzAddSched').addEventListener('click', () => {
+              const c = getClass(byId('wzSchedClass').value);
+              if(!c) return;
+              c.schedule.push({ id:uid(), day:Number(byId('wzSchedDay').value), start:byId('wzSchedTime').value, end: addMinutesToTime(byId('wzSchedTime').value, 50) });
+              saveState();
+              renderWzSchedList();
+            });
+          }
+          if(s==='assignment'){
+            byId('wzAddAssign').addEventListener('click', () => {
+              const title = byId('wzAssignTitle').value.trim();
+              if(!title) return;
+              const cls = getClass(byId('wzAssignClass').value);
+              state.assignments.push(newAssignment({ title, classId: cls?cls.id:null, subject: cls?cls.name:'', due: byId('wzAssignDue').value }));
+              saveState();
+              toast('Assignment added');
+              byId('wzAssignTitle').value='';
+            });
+          }
+          byId('wzSkip').addEventListener('click', finishWizard);
+          byId('wzNext').addEventListener('click', () => {
+            if(s==='canvas'){
+              const domain = byId('wzCanvasDomain').value.trim();
+              const token = byId('wzCanvasToken').value.trim();
+              if(domain && token){
+                state.settings.canvas.domain = domain.replace(/^https?:\/\//i,'').replace(/\/+$/,'');
+                state.settings.canvas.token = token;
+                state.settings.canvas.connected = true;
+                saveState();
+              }
+            }
+            if(step < steps.length-1){ step++; render(); } else { finishWizard(); }
+          });
+          if(step>0) byId('wzBack').addEventListener('click', () => { step--; render(); });
+        }
+      });
+    }
+    function renderWzClassList(){
+      const el = byId('wzClassList'); if(!el) return;
+      el.innerHTML = state.classes.map(c => `<div class="schedule-row"><span class="class-dot" style="background:${c.color}"></span>${escapeHtml(c.name)}</div>`).join('') || '';
+    }
+    function renderWzSchedList(){
+      const el = byId('wzSchedList'); if(!el) return;
+      const rows = [];
+      state.classes.forEach(c => c.schedule.forEach(sc => rows.push(`<div class="schedule-row"><span class="class-dot" style="background:${c.color}"></span>${escapeHtml(c.name)} &middot; ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][sc.day]} ${fmtTime12(sc.start)}</div>`)));
+      el.innerHTML = rows.join('') || '';
+    }
+    function finishWizard(){
+      state.ui.onboarded = true;
+      saveState();
+      closeModal();
+      renderCurrentView();
+      toast('Setup complete — welcome to Docket');
+    }
+    render();
+  }
+
+  function addMinutesToTime(t, mins){
+    const [h,m] = t.split(':').map(Number);
+    const total = h*60+m+mins;
+    return pad2(Math.floor((total%1440)/60)) + ':' + pad2(total%60);
+  }
+
+  /* =========================================================
+     NAVIGATION
+     ========================================================= */
+  qsa('.nav-item').forEach(btn => {
+    btn.addEventListener('click', () => { setView(btn.dataset.view); closeSidebar(); });
+  });
+  byId('menuBtn').addEventListener('click', () => { byId('sidebar').classList.add('open'); ui.sidebarOpen = true; });
+  byId('sidebarCloseBtn').addEventListener('click', closeSidebar);
+  function closeSidebar(){ byId('sidebar').classList.remove('open'); ui.sidebarOpen = false; }
+
+  byId('sidebarAddBtn').addEventListener('click', () => openAssignmentModal(null));
+  byId('searchBtn').addEventListener('click', openSearchModal);
+
+  const VIEW_RENDERERS = {};
+  function setView(view){
+    ui.view = view;
+    qsa('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+    qsa('.view').forEach(v => v.classList.add('hidden'));
+    const target = byId('view-' + view);
+    if(target) target.classList.remove('hidden');
+    byId('mainContent').scrollTop = 0;
+    renderCurrentView();
+  }
+  function renderCurrentView(){
+    if(!currentUser) return;
+    const fn = VIEW_RENDERERS[ui.view];
+    if(fn) fn();
+    updateNavBadge();
+  }
+  function updateNavBadge(){
+    const overdueCount = activeAssignments().filter(isOverdue).length;
+    const btn = qs('.nav-item[data-view="today"]');
+    let badge = btn.querySelector('.nav-badge');
+    if(overdueCount > 0){
+      if(!badge){ badge = document.createElement('span'); badge.className='nav-badge'; btn.appendChild(badge); }
+      badge.textContent = overdueCount;
+    } else if(badge){ badge.remove(); }
+  }
+
+  /* =========================================================
+     ASSIGNMENT CRUD
+     ========================================================= */
+  function newAssignment(overrides){
+    const a = {
+      id: uid(), title:'', subject:'', classId:null, due:'', dueTime:'', priority:'medium',
+      estimate:null, description:'', type:'homework', status:'not-started', progress:0, grade:'',
+      tags:[], subtasks:[], created: Date.now(), modified: Date.now(), source:'manual', canvasId:null, archived:false
+    };
+    Object.assign(a, overrides||{});
+    linkAssignmentToClass(a);
+    return a;
+  }
+
+  function openAssignmentModal(id, prefill){
+    ui.editingAssignmentId = id;
+    const existing = id ? state.assignments.find(a => a.id===id) : null;
+    const a = existing || newAssignment(prefill||{});
+    const isNew = !existing;
+    const classOptions = `<option value="">No class</option>` + state.classes.map(c => `<option value="${c.id}" ${a.classId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join('');
+
+    openModal({
+      title: isNew ? 'New assignment' : 'Edit assignment',
+      large: true,
+      bodyHtml: `
+        <div class="field"><label for="amTitle">Title</label><input type="text" id="amTitle" value="${escapeHtml(a.title)}" placeholder="e.g. Biology lab report"></div>
+        <div class="field-row3">
+          <div class="field"><label for="amClass">Class</label><select id="amClass">${classOptions}</select></div>
+          <div class="field"><label for="amDue">Due date</label><input type="date" id="amDue" value="${a.due||''}"></div>
+          <div class="field"><label for="amDueTime">Due time</label><input type="time" id="amDueTime" value="${a.dueTime||''}"></div>
+        </div>
+        <div class="field-row3">
+          <div class="field"><label>Priority</label>
+            <div class="segmented" id="amPriority">
+              <button type="button" data-v="low" class="${a.priority==='low'?'active':''}">Low</button>
+              <button type="button" data-v="medium" class="${a.priority==='medium'?'active':''}">Medium</button>
+              <button type="button" data-v="high" class="${a.priority==='high'?'active':''}">High</button>
+            </div>
+          </div>
+          <div class="field"><label for="amType">Type</label><select id="amType">${ASSIGN_TYPES.map(t=>`<option value="${t}" ${a.type===t?'selected':''}>${t[0].toUpperCase()+t.slice(1)}</option>`).join('')}</select></div>
+          <div class="field"><label for="amEstimate">Estimated time (min)</label><input type="number" min="0" step="5" id="amEstimate" value="${a.estimate!=null?a.estimate:''}"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Status</label>
+            <div class="segmented" id="amStatus">
+              <button type="button" data-v="not-started" class="${a.status==='not-started'?'active':''}">Not started</button>
+              <button type="button" data-v="in-progress" class="${a.status==='in-progress'?'active':''}">In progress</button>
+              <button type="button" data-v="completed" class="${a.status==='completed'?'active':''}">Completed</button>
+            </div>
+          </div>
+          <div class="field"><label for="amProgress">Progress (<span id="amProgressVal">${a.progress}</span>%)</label><input type="range" min="0" max="100" step="5" id="amProgress" value="${a.progress}"></div>
+        </div>
+        <div class="field"><label for="amDesc">Description / notes</label><textarea id="amDesc" placeholder="Details, links, instructions&hellip;">${escapeHtml(a.description)}</textarea></div>
+        <div class="field-row">
+          <div class="field"><label for="amGrade">Grade / value (optional)</label><input type="text" id="amGrade" value="${escapeHtml(a.grade)}" placeholder="e.g. 92% or 20 pts"></div>
+          <div class="field"><label>Tags</label>
+            <div class="tag-input-row" id="amTagRow">
+              ${a.tags.map(t=>`<span class="tag-pill">${escapeHtml(t)}<button type="button" data-tag="${escapeHtml(t)}">&times;</button></span>`).join('')}
+              <input type="text" id="amTagInput" placeholder="Add tag, Enter">
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Subtasks ${a.subtasks.length ? `(<span id="amSubCount">${a.subtasks.filter(s=>s.done).length}/${a.subtasks.length}</span> complete)` : ''}</label>
+          <div class="subtask-list" id="amSubtaskList">${renderSubtaskRows(a.subtasks)}</div>
+          <div class="subtask-add"><input type="text" id="amSubtaskInput" placeholder="Add a step, Enter"><button class="btn-secondary btn-sm" id="amAddSubtask" type="button">Add</button></div>
+        </div>
+        ${a.source==='canvas' ? `<p class="settings-row-hint">Imported from Canvas${a.canvasId?'':''}. You can still edit it — Docket won't overwrite your changes to status or notes on the next sync.</p>` : ''}
+      `,
+      footerHtml: `
+        <div>${isNew ? '' : `<button class="btn-danger btn-sm" id="amDelete">Delete</button>`}</div>
+        <div class="modal-footer-right">
+          <button class="btn-ghost" id="amCancel">Cancel</button>
+          <button class="btn-primary" id="amSave" style="width:auto;">${isNew ? 'Add assignment' : 'Save changes'}</button>
+        </div>`,
+      onMount(){
+        let localTags = a.tags.slice();
+        let localSubtasks = a.subtasks.map(s => ({...s}));
+        let localPriority = a.priority, localStatus = a.status;
+
+        qsa('#amPriority button').forEach(b => b.addEventListener('click', () => {
+          localPriority = b.dataset.v;
+          qsa('#amPriority button').forEach(x=>x.classList.toggle('active', x===b));
+        }));
+        qsa('#amStatus button').forEach(b => b.addEventListener('click', () => {
+          localStatus = b.dataset.v;
+          qsa('#amStatus button').forEach(x=>x.classList.toggle('active', x===b));
+          if(localStatus==='completed'){ byId('amProgress').value = 100; byId('amProgressVal').textContent = 100; }
+          if(localStatus==='not-started'){ byId('amProgress').value = 0; byId('amProgressVal').textContent = 0; }
+        }));
+        byId('amProgress').addEventListener('input', (e) => { byId('amProgressVal').textContent = e.target.value; });
+
+        function refreshTags(){
+          const row = byId('amTagRow');
+          qsa('.tag-pill', row).forEach(p => p.remove());
+          const input = byId('amTagInput');
+          localTags.forEach(t => {
+            const pill = document.createElement('span');
+            pill.className = 'tag-pill';
+            pill.innerHTML = `${escapeHtml(t)}<button type="button">&times;</button>`;
+            pill.querySelector('button').addEventListener('click', () => { localTags = localTags.filter(x=>x!==t); refreshTags(); });
+            row.insertBefore(pill, input);
+          });
+        }
+        byId('amTagInput').addEventListener('keydown', (e) => {
+          if(e.key === 'Enter'){
+            e.preventDefault();
+            const v = e.target.value.trim();
+            if(v && localTags.indexOf(v)===-1){ localTags.push(v); e.target.value=''; refreshTags(); }
+          }
+        });
+
+        function refreshSubtasks(){
+          byId('amSubtaskList').innerHTML = renderSubtaskRows(localSubtasks);
+          qsa('.subtask-row', byId('amSubtaskList')).forEach(row => {
+            const sid = row.dataset.id;
+            row.querySelector('.checkbox').addEventListener('click', () => {
+              const st = localSubtasks.find(s=>s.id===sid); st.done = !st.done; refreshSubtasks();
+            });
+            row.querySelector('input[type=text]').addEventListener('change', (e) => {
+              const st = localSubtasks.find(s=>s.id===sid); st.text = e.target.value;
+            });
+            row.querySelector('.task-delete').addEventListener('click', () => {
+              localSubtasks = localSubtasks.filter(s=>s.id!==sid); refreshSubtasks();
+            });
+          });
+        }
+        refreshSubtasks();
+        function addSubtaskFromInput(){
+          const inp = byId('amSubtaskInput');
+          const v = inp.value.trim();
+          if(!v) return;
+          localSubtasks.push({ id: uid(), text: v, done:false });
+          inp.value=''; refreshSubtasks();
+        }
+        byId('amAddSubtask').addEventListener('click', addSubtaskFromInput);
+        byId('amSubtaskInput').addEventListener('keydown', (e) => { if(e.key==='Enter'){ e.preventDefault(); addSubtaskFromInput(); } });
+
+        byId('amCancel').addEventListener('click', closeModal);
+        if(!isNew){
+          byId('amDelete').addEventListener('click', () => {
+            confirmDialog('Delete "' + a.title + '" permanently? This can\'t be undone.', {
+              confirmLabel:'Delete', onConfirm(){
+                state.assignments = state.assignments.filter(x=>x.id!==a.id);
+                saveState(); closeModal(); renderCurrentView(); toast('Assignment deleted');
+              }
+            });
+          });
+        }
+        byId('amSave').addEventListener('click', () => {
+          const title = byId('amTitle').value.trim();
+          if(!title){ toast('Give the assignment a title', 'error'); byId('amTitle').focus(); return; }
+          const classSel = byId('amClass').value;
+          const cls = getClass(classSel);
+          a.title = title;
+          a.classId = cls ? cls.id : null;
+          a.subject = cls ? cls.name : (a.subject||'');
+          a.due = byId('amDue').value;
+          a.dueTime = byId('amDueTime').value;
+          a.priority = localPriority;
+          a.type = byId('amType').value;
+          a.estimate = byId('amEstimate').value ? Number(byId('amEstimate').value) : null;
+          a.status = localStatus;
+          a.progress = Number(byId('amProgress').value);
+          if(a.status==='completed') a.progress = 100;
+          a.description = byId('amDesc').value;
+          a.grade = byId('amGrade').value.trim();
+          a.tags = localTags;
+          a.subtasks = localSubtasks;
+          a.modified = Date.now();
+          if(isNew){
+            state.assignments.push(a);
+            logActivity('add', 'Added "' + a.title + '"');
+            toast('Assignment added', 'success');
+          } else {
+            logActivity('edit', 'Edited "' + a.title + '"');
+            toast('Changes saved', 'success');
+          }
+          saveState();
+          closeModal();
+          renderCurrentView();
+        });
+      }
+    });
+  }
+
+  function renderSubtaskRows(subtasks){
+    if(!subtasks.length) return `<p style="color:var(--faint); font-size:12.5px; margin:0;">No steps yet.</p>`;
+    return subtasks.map(s => `
+      <div class="subtask-row" data-id="${s.id}">
+        <button type="button" class="checkbox${s.done?' checked':''}" aria-label="Toggle step"></button>
+        <input type="text" value="${escapeHtml(s.text)}" class="${s.done?'done':''}">
+        <button type="button" class="task-delete" aria-label="Remove step">&times;</button>
+      </div>`).join('');
+  }
+
+  function toggleAssignmentStatus(id){
+    const a = state.assignments.find(x=>x.id===id); if(!a) return;
+    if(a.status === 'completed'){ a.status = 'not-started'; a.progress = 0; }
+    else { a.status = 'completed'; a.progress = 100; logActivity('complete', 'Completed "'+a.title+'"'); }
+    a.modified = Date.now();
+    saveState();
+    renderCurrentView();
+  }
+  function toggleSubtask(assignmentId, subtaskId){
+    const a = state.assignments.find(x=>x.id===assignmentId); if(!a) return;
+    const st = a.subtasks.find(s=>s.id===subtaskId); if(!st) return;
+    st.done = !st.done;
+    const total = a.subtasks.length, done = a.subtasks.filter(s=>s.done).length;
+    if(total){ a.progress = Math.round((done/total)*100); if(done===total && a.status!=='completed'){ /* leave status manual */ } }
+    a.modified = Date.now();
+    saveState();
+    renderCurrentView();
+  }
+  function deleteAssignmentQuick(id){
+    const a = state.assignments.find(x=>x.id===id); if(!a) return;
+    confirmDialog('Delete "' + a.title + '"?', { confirmLabel:'Delete', onConfirm(){
+      state.assignments = state.assignments.filter(x=>x.id!==id);
+      saveState(); renderCurrentView(); toast('Assignment deleted');
+    }});
+  }
+  function archiveAssignment(id){
+    const a = state.assignments.find(x=>x.id===id); if(!a) return;
+    a.archived = true; saveState(); renderCurrentView(); toast('Archived');
+  }
+  function restoreAssignment(id){
+    const a = state.assignments.find(x=>x.id===id); if(!a) return;
+    a.archived = false; saveState(); renderCurrentView(); toast('Restored');
+  }
+
+  window.__docket = {
+    toggleAssign: toggleAssignmentStatus,
+    deleteAssign: deleteAssignmentQuick,
+    openAssign: (id) => openAssignmentModal(id),
+    toggleSubtask, archiveAssignment, restoreAssignment,
+    openClass: (id) => openClassDetail(id),
+    openExam: (id) => openExamModal(id),
+    openNote: (id) => openNoteModal(id),
+    calGoto: (iso) => { ui.calDate = parseISO(iso) || new Date(); setView('calendar'); },
+    calNewAt: (iso) => openAssignmentModal(null, { due: iso })
+  };
+
+  /* =========================================================
+     DASHBOARD
+     ========================================================= */
+  VIEW_RENDERERS.dashboard = function(){
+    const el = byId('view-dashboard');
+    const list = activeAssignments();
+    const doneToday = list.filter(a => isDone(a) && a.modified && fmtISO(new Date(a.modified)) === todayISO()).length;
+    const dueToday = list.filter(a => a.due === todayISO() && !isDone(a));
+    const tomorrowISO = fmtISO(addDays(todayDate(),1));
+    const dueTomorrow = list.filter(a => a.due === tomorrowISO && !isDone(a));
+    const overdue = list.filter(isOverdue);
+    const upcoming = list.filter(a => a.due && a.due > tomorrowISO && !isDone(a) && daysBetweenISO(todayISO(), a.due) <= 7);
+    const totalActive = list.filter(a => !isDone(a)).length;
+    const totalAll = list.length;
+    const doneCount = list.filter(isDone).length;
+    const pct = totalAll ? Math.round((doneCount/totalAll)*100) : 0;
+    const weekAgo = fmtISO(addDays(todayDate(), -7));
+    const completedThisWeek = list.filter(a => isDone(a) && a.modified && fmtISO(new Date(a.modified)) >= weekAgo).length;
+    const next = whatsNext(4);
+    const streak = computeStreak();
+
+    const todaySched = todaysSchedule();
+    const nextClass = nextClassToday();
+
+    el.innerHTML = `
+      <p class="greeting serif">${greetingWord()}, ${escapeHtml(currentUser)}.</p>
+      <p class="greeting-date">${todayDate().toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'})}${nextClass ? ' &middot; Next class: ' + escapeHtml(nextClass.name) + ' at ' + fmtTime12(nextClass.start) : ''}</p>
+
+      <div class="grid-stats">
+        <div class="stat-card"><div class="stat-num">${totalActive}</div><div class="stat-label">Active assignments</div></div>
+        <div class="stat-card"><div class="stat-num">${overdue.length}</div><div class="stat-label">Overdue</div></div>
+        <div class="stat-card"><div class="stat-num">${pct}%</div><div class="stat-label">Completed overall</div></div>
+        <div class="stat-card"><div class="stat-num">${completedThisWeek}</div><div class="stat-label">Done this week</div></div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <div class="card">
+            <p class="card-title">What's next? <small>ranked by due date, priority &amp; time</small></p>
+            ${next.length ? next.map((n,i) => `
+              <div class="next-item">
+                <span class="next-rank">${i+1}</span>
+                <div class="next-body">
+                  <div class="next-title"><button class="btn-ghost" style="padding:0;font-weight:500;color:var(--ink);" onclick="__docket.openAssign('${n.a.id}')">${escapeHtml(n.a.title)}</button></div>
+                  <div class="next-reason">Suggested next: ${n.s.reasons.join(', ')}${subjectLabel(n.a) ? ' &middot; ' + escapeHtml(subjectLabel(n.a)) : ''}</div>
+                </div>
+              </div>`).join('') : `<p class="empty-state">Nothing pending — you're caught up.</p>`}
+          </div>
+
+          <div class="card">
+            <p class="card-title">Due soon</p>
+            ${renderMiniList(overdue, 'Overdue', true)}
+            ${renderMiniList(dueToday, 'Today')}
+            ${renderMiniList(dueTomorrow, 'Tomorrow')}
+            ${renderMiniList(upcoming, 'This week')}
+            ${(!overdue.length && !dueToday.length && !dueTomorrow.length && !upcoming.length) ? `<p class="empty-state">Nothing due in the next week. Add an assignment to get started.<br><button class="btn-secondary" onclick="__docket.openAssign(null)">Add assignment</button></p>` : ''}
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <p class="card-title">Today's schedule</p>
+            ${todaySched.length ? todaySched.map(s => `<div class="schedule-row"><span class="schedule-time">${fmtTime12(s.start)}</span><span class="class-dot" style="background:${s.color}"></span>${escapeHtml(s.name)}</div>`).join('') : `<p class="empty-state">No classes scheduled today.</p>`}
+          </div>
+          <div class="card">
+            <p class="card-title">Streak</p>
+            <div class="streak-row">
+              <div class="streak-num">${streak}</div>
+              <div>
+                <div style="font-size:13px;">day${streak===1?'':'s'} completing something</div>
+                <div class="settings-row-hint">${doneToday} done today &middot; keep it going</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <p class="card-title">Recent activity</p>
+            ${state.activity.length ? state.activity.slice(0,6).map(a => `<div class="activity-row"><span class="activity-time">${new Date(a.ts).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})}</span><span>${escapeHtml(a.text)}</span></div>`).join('') : `<p class="empty-state">Nothing yet — actions you take will show up here.</p>`}
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="card-title">Plan my day <small>deterministic, based on due dates &amp; priority</small></p>
+        <button class="btn-secondary btn-sm" id="dashPlanBtn">Plan my day</button>
+        <div id="dashPlanResult" style="margin-top:14px;"></div>
+      </div>
+    `;
+    byId('dashPlanBtn').addEventListener('click', () => { renderPlanMyDay(byId('dashPlanResult')); });
+    if(state.planMyDay && state.planMyDay.date === todayISO()){ renderPlanMyDay(byId('dashPlanResult'), true); }
+  };
+
+  function greetingWord(){
+    const h = new Date().getHours();
+    if(h < 5) return 'Up late';
+    if(h < 12) return 'Good morning';
+    if(h < 17) return 'Good afternoon';
+    return 'Good evening';
+  }
+
+  function renderMiniList(items, label, overdueStyle){
+    if(!items.length) return '';
+    return `<p class="group-title ${overdueStyle?'overdue':''}" style="margin-top:10px;">${label} <span class="group-count">${items.length}</span></p>` +
+      items.slice(0,5).map(a => `
+        <div class="task-row" onclick="__docket.openAssign('${a.id}')">
+          <button class="checkbox${isDone(a)?' checked':''}" onclick="event.stopPropagation(); __docket.toggleAssign('${a.id}')" aria-label="Mark complete"></button>
+          <div class="task-body">
+            <div class="task-top">
+              <span class="priority-dot ${a.priority}"></span>
+              <span class="task-title">${escapeHtml(a.title)}</span>
+            </div>
+            <div class="task-meta">
+              ${subjectLabel(a) ? `<span class="task-subject"><span class="subject-dot" style="background:${subjectColorFor(a)}"></span>${escapeHtml(subjectLabel(a))}</span>` : ''}
+              ${a.due ? `<span class="task-due ${isOverdue(a)?'overdue':(a.due===todayISO()?'today':'')}">${dueLabel(a.due)}</span>` : ''}
+            </div>
+          </div>
+        </div>`).join('');
+  }
+
+  function todaysSchedule(){
+    const dow = new Date().getDay(); // 0=Sun..6=Sat
+    const rows = [];
+    state.classes.forEach(c => (c.schedule||[]).forEach(s => { if(s.day === dow) rows.push({ name:c.name, start:s.start, end:s.end, color:c.color }); }));
+    rows.sort((a,b)=> a.start.localeCompare(b.start));
+    return rows;
+  }
+  function nextClassToday(){
+    const now = nowHM();
+    const upcoming = todaysSchedule().filter(s => s.start >= now);
+    return upcoming[0] || null;
+  }
+
+  function computeStreak(){
+    // count consecutive days (including today) with at least one assignment completed or study session finished
+    let streak = 0;
+    for(let i=0;i<365;i++){
+      const iso = fmtISO(addDays(todayDate(), -i));
+      const hasCompletion = state.assignments.some(a => isDone(a) && a.modified && fmtISO(new Date(a.modified)) === iso)
+        || state.studySessions.some(s => s.completed && s.date === iso);
+      if(hasCompletion) streak++;
+      else if(i===0) continue; // today might just not have one yet, don't break streak on day 0
+      else break;
+    }
+    return streak;
+  }
+
+  /* =========================================================
+     PLAN MY DAY
+     ========================================================= */
+  function renderPlanMyDay(container, silent){
+    const iso = todayISO();
+    let plan = state.planMyDay && state.planMyDay.date === iso ? state.planMyDay : generatePlan(iso);
+    state.planMyDay = plan;
+    saveState();
+    drawPlan(container, plan);
+    if(!silent) toast('Plan generated');
+  }
+
+  function generatePlan(iso){
+    const candidates = whatsNext(8).filter(x => !x.a.due || daysBetweenISO(iso, x.a.due) <= 7);
+    const busy = [];
+    todaysSchedule().forEach(s => busy.push({ start:s.start, end:s.end }));
+    state.studySessions.filter(s=>s.date===iso).forEach(s => busy.push({ start:s.startTime, end: addMinutesToTime(s.startTime, s.durationMin) }));
+
+    function overlaps(start, end){
+      return busy.some(b => start < b.end && end > b.start);
+    }
+    function toMin(hm){ const [h,m]=hm.split(':').map(Number); return h*60+m; }
+    function toHM(min){ return pad2(Math.floor((min%1440)/60)) + ':' + pad2(min%60); }
+
+    const dayStartMin = Math.max(toMin(nowHM()) + 10, toMin('15:30')); // after "now" and not before mid-afternoon by default
+    let cursor = dayStartMin;
+    const dayEnd = toMin('21:00');
+    const blocks = [];
+    for(const { a, s } of candidates){
+      if(blocks.length >= 5) break;
+      const dur = a.estimate || state.settings.defaultDuration || 30;
+      let start = cursor;
+      let attempts = 0;
+      while(overlaps(toHM(start), toHM(start+dur)) && attempts < 20){ start += 15; attempts++; }
+      const end = start + dur;
+      if(end > dayEnd) continue;
+      blocks.push({ id: uid(), assignmentId: a.id, title: a.title, subject: subjectLabel(a), start: toHM(start), end: toHM(end), reasons: s.reasons });
+      busy.push({ start: toHM(start), end: toHM(end) });
+      cursor = end + 10;
+    }
+    return { date: iso, blocks };
+  }
+
+  function drawPlan(container, plan){
+    if(!plan.blocks.length){
+      container.innerHTML = `<p class="empty-state">Nothing urgent to schedule — enjoy the free time, or check Assignments for anything further out.</p>`;
+      return;
+    }
+    container.innerHTML = `<div id="planBlocks">` + plan.blocks.map((b,i) => `
+      <div class="next-item" data-idx="${i}">
+        <span class="next-rank mono">${fmtTime12(b.start)}</span>
+        <div class="next-body">
+          <div class="next-title">${escapeHtml(b.subject ? b.subject + ' — ' : '')}${escapeHtml(b.title)} <span class="settings-row-hint">(${fmtTime12(b.start)}&ndash;${fmtTime12(b.end)})</span></div>
+          <div class="next-reason">${b.reasons.join(', ')}</div>
+        </div>
+        <button class="task-delete" aria-label="Remove from plan" data-remove="${i}">&times;</button>
+      </div>`).join('') + `</div>`;
+    qsa('[data-remove]', container).forEach(btn => btn.addEventListener('click', () => {
+      const idx = Number(btn.dataset.remove);
+      plan.blocks.splice(idx,1);
+      state.planMyDay = plan; saveState();
+      drawPlan(container, plan);
+    }));
+  }
+
+  /* =========================================================
+     TODAY VIEW
+     ========================================================= */
+  VIEW_RENDERERS.today = function(){
+    const el = byId('view-today');
+    const iso = todayISO();
+    const list = activeAssignments();
+    const overdue = list.filter(isOverdue);
+    const dueToday = list.filter(a => a.due===iso && !isDone(a));
+    const sched = todaysSchedule();
+    const sessions = state.studySessions.filter(s => s.date === iso);
+    const exams = state.exams.filter(e => daysBetweenISO(iso, e.date) !== null && daysBetweenISO(iso, e.date) >= 0 && daysBetweenISO(iso, e.date) <= 3);
+    const completedToday = state.assignments.filter(a => isDone(a) && a.modified && fmtISO(new Date(a.modified))===iso);
+
+    el.innerHTML = `
+      <div class="view-header">
+        <div><h1 class="view-title">Today</h1><p class="view-sub">${todayDate().toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'})}</p></div>
+        <div class="view-actions"><button class="btn-secondary btn-sm" id="todayPlanBtn">Plan my day</button></div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <div class="card"><p class="card-title">Schedule</p>
+            ${sched.length ? sched.map(s=>`<div class="schedule-row"><span class="schedule-time">${fmtTime12(s.start)}</span><span class="class-dot" style="background:${s.color}"></span>${escapeHtml(s.name)}</div>`).join('') : `<p class="empty-state">No classes today.</p>`}
+          </div>
+          <div class="card"><p class="card-title">Overdue <small>${overdue.length}</small></p>
+            ${overdue.length ? overdue.map(a=>renderTaskRow(a)).join('') : `<p class="empty-state">Nothing overdue. Nicely done.</p>`}
+          </div>
+          <div class="card"><p class="card-title">Due today <small>${dueToday.length}</small></p>
+            ${dueToday.length ? dueToday.map(a=>renderTaskRow(a)).join('') : `<p class="empty-state">Nothing due today.</p>`}
+          </div>
+        </div>
+        <div>
+          <div class="card"><p class="card-title">Study sessions</p>
+            ${sessions.length ? sessions.map(s=>`<div class="schedule-row"><span class="schedule-time">${fmtTime12(s.startTime)}</span>${escapeHtml(s.subject||'Study')} &middot; ${s.durationMin} min ${s.completed?'&middot; done':''}</div>`).join('') : `<p class="empty-state">No study sessions planned.<br><button class="btn-secondary btn-sm" id="todayAddStudy" style="margin-top:8px;">Add a study session</button></p>`}
+          </div>
+          <div class="card"><p class="card-title">Exams coming up</p>
+            ${exams.length ? exams.map(e=>`<div class="schedule-row" onclick="__docket.openExam('${e.id}')" style="cursor:pointer;">${escapeHtml(e.name)} &middot; ${examCountdown(e.date)}</div>`).join('') : `<p class="empty-state">Nothing in the next few days.</p>`}
+          </div>
+          <div class="card"><p class="card-title">End of day summary</p>
+            <p style="margin:0;">${completedToday.length} assignment${completedToday.length===1?'':'s'} completed today.</p>
+          </div>
+        </div>
+      </div>
+      <div id="todayPlanResult"></div>
+    `;
+    byId('todayPlanBtn').addEventListener('click', () => renderPlanMyDay(byId('todayPlanResult')));
+    const sBtn = byId('todayAddStudy');
+    if(sBtn) sBtn.addEventListener('click', () => openStudySessionModal(null, { date: iso }));
+  };
+
+  function renderTaskRow(a){
+    return `<div class="task-row ${isOverdue(a)?'overdue-row':''}" onclick="__docket.openAssign('${a.id}')">
+      <button class="checkbox${isDone(a)?' checked':''}" onclick="event.stopPropagation(); __docket.toggleAssign('${a.id}')" aria-label="Mark complete"></button>
+      <div class="task-body">
+        <div class="task-top">
+          <span class="priority-dot ${a.priority}"></span>
+          <span class="task-title ${isDone(a)?'done':''}">${escapeHtml(a.title)}</span>
+          <span class="badge badge-type">${escapeHtml(a.type)}</span>
+        </div>
+        <div class="task-meta">
+          ${subjectLabel(a) ? `<span class="task-subject"><span class="subject-dot" style="background:${subjectColorFor(a)}"></span>${escapeHtml(subjectLabel(a))}</span>` : ''}
+          ${a.due ? `<span class="task-due ${isOverdue(a)?'overdue':(a.due===todayISO()?'today':'')}">${dueLabel(a.due)}</span>` : '<span>No due date</span>'}
+          ${a.subtasks.length ? `<span>${a.subtasks.filter(s=>s.done).length}/${a.subtasks.length} steps</span>` : ''}
+          ${a.progress ? `<span class="progress-mini"><div style="width:${a.progress}%"></div></span>` : ''}
+        </div>
+      </div>
+      <div class="task-actions">
+        ${isDone(a) && !a.archived ? `<button class="btn-ghost" style="font-size:11px;" onclick="event.stopPropagation(); __docket.archiveAssign('${a.id}')">Archive</button>` : ''}
+        ${a.archived ? `<button class="btn-ghost" style="font-size:11px;" onclick="event.stopPropagation(); __docket.restoreAssign('${a.id}')">Restore</button>` : ''}
+        <button class="task-delete" onclick="event.stopPropagation(); __docket.deleteAssign('${a.id}')" aria-label="Delete">&times;</button>
+      </div>
+    </div>`;
+  }
+
+  /* =========================================================
+     ASSIGNMENTS VIEW (filter / sort / search)
+     ========================================================= */
+  VIEW_RENDERERS.assignments = function(){
+    const el = byId('view-assignments');
+    const f = ui.assignFilter;
+    const allTags = [...new Set(activeAssignments().flatMap(a=>a.tags))];
+    const allSubjects = [...new Set(activeAssignments().map(subjectLabel).filter(Boolean))];
+
+    el.innerHTML = `
+      <div class="view-header">
+        <div><h1 class="view-title">Assignments</h1><p class="view-sub">${activeAssignments().filter(a=>!isDone(a)).length} active</p></div>
+        <div class="view-actions">
+          <button class="btn-secondary btn-sm" id="viewArchiveBtn">View archive</button>
+          <button class="btn-primary" style="width:auto;" id="assignNewBtn">+ New assignment</button>
+        </div>
+      </div>
+
+      <div class="add-row">
+        <input type="text" id="quickTitleInput" placeholder="Quick add: 'Math homework Friday'">
+        <input type="date" id="quickDueInput">
+        <button class="btn-add" id="quickAddBtn">Add</button>
+      </div>
+
+      <div class="toolbar">
+        <select id="fStatus">
+          <option value="all">All statuses</option>
+          <option value="active">Active</option>
+          <option value="not-started">Not started</option>
+          <option value="in-progress">In progress</option>
+          <option value="completed">Completed</option>
+        </select>
+        <select id="fSubject"><option value="">All subjects</option>${allSubjects.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('')}</select>
+        <select id="fPriority"><option value="">All priorities</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select>
+        <select id="fType"><option value="">All types</option>${ASSIGN_TYPES.map(t=>`<option value="${t}">${t[0].toUpperCase()+t.slice(1)}</option>`).join('')}</select>
+        ${allTags.length ? `<select id="fTag"><option value="">All tags</option>${allTags.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('')}</select>` : ''}
+        <select id="fSort">
+          <option value="due">Sort: Due date</option>
+          <option value="priority">Sort: Priority</option>
+          <option value="created">Sort: Created date</option>
+          <option value="estimate">Sort: Estimated time</option>
+          <option value="subject">Sort: Subject</option>
+        </select>
+        <button class="btn-ghost" id="fClear">Clear filters</button>
+      </div>
+
+      <div id="assignmentGroups"></div>
+    `;
+    byId('fStatus').value = f.status; byId('fSubject').value = f.subject; byId('fPriority').value = f.priority;
+    byId('fType').value = f.type; byId('fSort').value = f.sort;
+    const tagSel = byId('fTag'); if(tagSel) tagSel.value = f.tag;
+
+    byId('assignNewBtn').addEventListener('click', () => openAssignmentModal(null));
+    byId('viewArchiveBtn').addEventListener('click', openArchiveModal);
+    byId('quickAddBtn').addEventListener('click', quickAddFromToolbar);
+    byId('quickTitleInput').addEventListener('keydown', (e) => { if(e.key==='Enter') quickAddFromToolbar(); });
+    ['fStatus','fSubject','fPriority','fType','fSort'].forEach(id => {
+      const node = byId(id); if(node) node.addEventListener('change', (e) => { f[id.slice(1).toLowerCase()] = e.target.value; renderAssignmentGroups(); });
+    });
+    if(tagSel) tagSel.addEventListener('change', (e) => { f.tag = e.target.value; renderAssignmentGroups(); });
+    byId('fClear').addEventListener('click', () => {
+      ui.assignFilter = { status:'all', subject:'', priority:'', type:'', tag:'', sort:'due' };
+      renderCurrentView();
+    });
+    renderAssignmentGroups();
+  };
+
+  function quickAddFromToolbar(){
+    const titleRaw = byId('quickTitleInput').value.trim();
+    const dueField = byId('quickDueInput').value;
+    if(!titleRaw) return;
+    const parsed = parseQuickAdd(titleRaw);
+    const a = newAssignment({ title: parsed.title, due: dueField || parsed.due || '' });
+    state.assignments.push(a);
+    logActivity('add', 'Added "'+a.title+'"');
+    saveState();
+    byId('quickTitleInput').value=''; byId('quickDueInput').value='';
+    renderAssignmentGroups();
+    toast('Assignment added', 'success');
+  }
+
+  function parseQuickAdd(text){
+    const weekdays = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+    const lower = text.toLowerCase();
+    let due = '';
+    let title = text;
+    const wd = weekdays.find(w => lower.endsWith(' ' + w) || lower.endsWith(' ' + w.slice(0,3)));
+    if(lower.endsWith(' today')){ due = todayISO(); title = text.slice(0, -6).trim(); }
+    else if(lower.endsWith(' tomorrow')){ due = fmtISO(addDays(todayDate(),1)); title = text.slice(0,-9).trim(); }
+    else if(wd){
+      const targetIdx = weekdays.indexOf(wd);
+      const todayIdx = todayDate().getDay();
+      let delta = (targetIdx - todayIdx + 7) % 7;
+      if(delta === 0) delta = 7;
+      due = fmtISO(addDays(todayDate(), delta));
+      const re = new RegExp('\\s+' + wd + '$', 'i');
+      title = text.replace(re, '').trim();
+      const re2 = new RegExp('\\s+' + wd.slice(0,3) + '$', 'i');
+      title = title.replace(re2, '').trim();
+    }
+    return { title: title || text, due };
+  }
+
+  function renderAssignmentGroups(){
+    const container = byId('assignmentGroups');
+    if(!container) return;
+    const f = ui.assignFilter;
+    let list = activeAssignments();
+    if(f.status === 'active') list = list.filter(a=>!isDone(a));
+    else if(f.status !== 'all') list = list.filter(a=>a.status===f.status);
+    if(f.subject) list = list.filter(a=>subjectLabel(a)===f.subject);
+    if(f.priority) list = list.filter(a=>a.priority===f.priority);
+    if(f.type) list = list.filter(a=>a.type===f.type);
+    if(f.tag) list = list.filter(a=>a.tags.includes(f.tag));
+
+    const sortFns = {
+      due: (a,b) => (a.due||'9999').localeCompare(b.due||'9999'),
+      priority: (a,b) => (PRIORITY_WEIGHT[b.priority]||0) - (PRIORITY_WEIGHT[a.priority]||0),
+      created: (a,b) => b.created - a.created,
+      estimate: (a,b) => (b.estimate||0) - (a.estimate||0),
+      subject: (a,b) => subjectLabel(a).localeCompare(subjectLabel(b))
+    };
+    list = list.slice().sort(sortFns[f.sort] || sortFns.due);
+
+    if(!list.length){
+      container.innerHTML = `<p class="empty-state">${activeAssignments().length ? 'Nothing matches these filters.' : 'Nothing on your docket yet.'}<br><button class="btn-secondary" onclick="__docket.openAssign(null)">Add an assignment</button></p>`;
+      return;
+    }
+
+    function bucketFor(a){
+      if(isDone(a)) return 'Completed';
+      if(!a.due) return 'No due date';
+      const diff = daysBetweenISO(todayISO(), a.due);
+      if(diff < 0) return 'Overdue';
+      if(diff === 0) return 'Today';
+      if(diff <= 7) return 'This week';
+      return 'Later';
+    }
+    const order = ['Overdue','Today','This week','Later','No due date','Completed'];
+    const groups = {};
+    list.forEach(a => { const b = bucketFor(a); (groups[b]=groups[b]||[]).push(a); });
+
+    let html = '';
+    order.forEach(b => {
+      if(!groups[b]) return;
+      html += `<div class="group"><p class="group-title ${b==='Overdue'?'overdue':''}">${b} <span class="group-count">${groups[b].length}</span></p>${groups[b].map(renderTaskRow).join('')}</div>`;
+    });
+    container.innerHTML = html;
+  }
+
+  function openArchiveModal(){
+    const archived = state.assignments.filter(a=>a.archived);
+    openModal({
+      title: 'Archived assignments', large:true,
+      bodyHtml: archived.length ? archived.map(a => `
+        <div class="task-row">
+          <div class="task-body">
+            <div class="task-title">${escapeHtml(a.title)}</div>
+            <div class="task-meta">${subjectLabel(a) ? escapeHtml(subjectLabel(a)) : ''}</div>
+          </div>
+          <button class="btn-secondary btn-sm" onclick="__docket.restoreAssign('${a.id}'); __docket.openArchive && __docket.openArchive();">Restore</button>
+        </div>`).join('') : `<p class="empty-state">Nothing archived.</p>`,
+      footerHtml: `<div></div><div class="modal-footer-right"><button class="btn-ghost" onclick="document.getElementById('modalOverlay').classList.add('hidden')">Close</button></div>`
+    });
+  }
+  window.__docket.restoreAssign = restoreAssignment;
+  window.__docket.openArchive = openArchiveModal;
+
+  /* =========================================================
+     CALENDAR VIEW
+     ========================================================= */
+  VIEW_RENDERERS.calendar = function(){
+    const el = byId('view-calendar');
+    el.innerHTML = `
+      <div class="view-header">
+        <div><h1 class="view-title">Calendar</h1><p class="view-sub">Assignments and exams on their due dates.</p></div>
+      </div>
+      <div class="cal-nav">
+        <button class="btn-secondary btn-sm" id="calPrev">&larr; Prev</button>
+        <button class="btn-secondary btn-sm" id="calTodayBtn">Today</button>
+        <button class="btn-secondary btn-sm" id="calNext">Next &rarr;</button>
+        <div class="cal-title serif" id="calTitle"></div>
+        <div class="cal-view-toggle segmented" id="calViewToggle" style="width:220px;">
+          <button type="button" data-v="month">Month</button>
+          <button type="button" data-v="week">Week</button>
+          <button type="button" data-v="day">Day</button>
+        </div>
+      </div>
+      <div id="calBody"></div>
+    `;
+    qsa('#calViewToggle button').forEach(b => {
+      b.classList.toggle('active', b.dataset.v === ui.calView);
+      b.addEventListener('click', () => { ui.calView = b.dataset.v; renderCalendar(); });
+    });
+    byId('calPrev').addEventListener('click', () => { calStep(-1); });
+    byId('calNext').addEventListener('click', () => { calStep(1); });
+    byId('calTodayBtn').addEventListener('click', () => { ui.calDate = new Date(); renderCalendar(); });
+    renderCalendar();
+  };
+
+  function calStep(dir){
+    if(ui.calView === 'month'){ ui.calDate = new Date(ui.calDate.getFullYear(), ui.calDate.getMonth()+dir, 1); }
+    else if(ui.calView === 'week'){ ui.calDate = addDays(ui.calDate, dir*7); }
+    else { ui.calDate = addDays(ui.calDate, dir); }
+    renderCalendar();
+  }
+
+  function eventsForDate(iso){
+    const evs = [];
+    activeAssignments().forEach(a => { if(a.due === iso) evs.push({ kind:'assignment', id:a.id, title:a.title, done:isDone(a), overdue:isOverdue(a) }); });
+    state.exams.forEach(e => { if(e.date === iso) evs.push({ kind:'exam', id:e.id, title:e.name }); });
+    return evs;
+  }
+
+  function renderCalendar(){
+    const body = byId('calBody');
+    if(!body) return;
+    if(ui.calView === 'month') renderCalMonth(body);
+    else if(ui.calView === 'week') renderCalWeek(body);
+    else renderCalDay(body);
+  }
+
+  function renderCalMonth(body){
+    const d = ui.calDate;
+    byId('calTitle').textContent = monthYear(d);
+    const first = new Date(d.getFullYear(), d.getMonth(), 1);
+    const weekStart = state.settings.weekStart || 1;
+    let startOffset = (first.getDay() - weekStart + 7) % 7;
+    const gridStart = addDays(first, -startOffset);
+    const dowLabels = [];
+    for(let i=0;i<7;i++){ dowLabels.push(addDays(gridStart,i).toLocaleDateString(undefined,{weekday:'short'})); }
+
+    let html = `<div class="cal-grid">` + dowLabels.map(l=>`<div class="cal-dow">${l}</div>`).join('');
+    for(let i=0;i<42;i++){
+      const day = addDays(gridStart, i);
+      const iso = fmtISO(day);
+      const inMonth = day.getMonth() === d.getMonth();
+      const evs = eventsForDate(iso);
+      const isToday = iso === todayISO();
+      html += `<div class="cal-cell ${inMonth?'':'other-month'} ${isToday?'today':''}" data-date="${iso}">
+        <div class="cal-daynum">${day.getDate()}</div>
+        ${evs.slice(0,3).map(e => `<div class="cal-event ${e.kind==='exam'?'exam-ev':(e.overdue?'overdue-ev':'')}" data-ev="${e.kind}:${e.id}">${escapeHtml(e.title)}</div>`).join('')}
+        ${evs.length>3 ? `<div class="cal-more">+${evs.length-3} more</div>` : ''}
+      </div>`;
+      if(i%7===6 && i<41) {} // continue grid
+    }
+    html += `</div>`;
+    body.innerHTML = html;
+    bindCalCells(body);
+  }
+
+  function renderCalWeek(body){
+    const weekStart = state.settings.weekStart || 1;
+    const d = ui.calDate;
+    let offset = (d.getDay() - weekStart + 7) % 7;
+    const start = addDays(d, -offset);
+    byId('calTitle').textContent = start.toLocaleDateString(undefined,{month:'short',day:'numeric'}) + ' – ' + addDays(start,6).toLocaleDateString(undefined,{month:'short',day:'numeric'});
+    let html = `<div class="cal-grid cal-week-row">` + Array.from({length:7}).map((_,i)=>`<div class="cal-dow">${addDays(start,i).toLocaleDateString(undefined,{weekday:'short'})}</div>`).join('');
+    for(let i=0;i<7;i++){
+      const day = addDays(start,i); const iso = fmtISO(day);
+      const evs = eventsForDate(iso);
+      const isToday = iso===todayISO();
+      html += `<div class="cal-cell ${isToday?'today':''}" data-date="${iso}">
+        <div class="cal-daynum">${day.getDate()}</div>
+        ${evs.map(e => `<div class="cal-event ${e.kind==='exam'?'exam-ev':(e.overdue?'overdue-ev':'')}" data-ev="${e.kind}:${e.id}">${escapeHtml(e.title)}</div>`).join('')}
+      </div>`;
+    }
+    html += `</div>`;
+    body.innerHTML = html;
+    bindCalCells(body);
+  }
+
+  function renderCalDay(body){
+    const iso = fmtISO(ui.calDate);
+    byId('calTitle').textContent = ui.calDate.toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'});
+    const evs = eventsForDate(iso);
+    const sched = state.classes.flatMap(c => (c.schedule||[]).filter(s=>s.day===ui.calDate.getDay()).map(s=>({name:c.name,start:s.start,color:c.color})));
+    sched.sort((a,b)=>a.start.localeCompare(b.start));
+    body.innerHTML = `
+      <div class="card"><p class="card-title">Classes</p>${sched.length?sched.map(s=>`<div class="schedule-row"><span class="schedule-time">${fmtTime12(s.start)}</span><span class="class-dot" style="background:${s.color}"></span>${escapeHtml(s.name)}</div>`).join(''):'<p class="empty-state">No classes.</p>'}</div>
+      <div class="card"><p class="card-title">Due / exams <button class="btn-ghost" data-newat="${iso}">+ add</button></p>
+      <div class="cal-day-list">${evs.length ? evs.map(e=>`<div class="task-row" data-ev="${e.kind}:${e.id}"><span class="priority-dot ${e.kind==='exam'?'high':'medium'}"></span> ${escapeHtml(e.title)}</div>`).join('') : `<p class="empty-state">Nothing due this day.</p>`}</div></div>
+    `;
+    bindCalCells(body);
+  }
+
+  function bindCalCells(body){
+    qsa('.cal-cell[data-date]', body).forEach(cell => {
+      cell.addEventListener('click', (e) => {
+        if(e.target.closest('[data-ev]')) return;
+        __docket.calNewAt(cell.dataset.date);
+      });
+    });
+    qsa('[data-ev]', body).forEach(evEl => {
+      evEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const [kind,id] = evEl.dataset.ev.split(':');
+        if(kind==='assignment') openAssignmentModal(id); else openExamModal(id);
+      });
+    });
+    const newAtBtn = qs('[data-newat]', body);
+    if(newAtBtn) newAtBtn.addEventListener('click', () => __docket.calNewAt(newAtBtn.dataset.newat));
+  }
+
+  /* =========================================================
+     WEEKLY PLANNER
+     ========================================================= */
+  VIEW_RENDERERS.planner = function(){
+    const el = byId('view-planner');
+    el.innerHTML = `
+      <div class="view-header">
+        <div><h1 class="view-title">Weekly Planner</h1><p class="view-sub">Assignments, exams and study blocks, Monday through Sunday.</p></div>
+        <div class="view-actions">
+          <button class="btn-secondary btn-sm" id="plPrev">&larr; Prev week</button>
+          <button class="btn-secondary btn-sm" id="plToday">This week</button>
+          <button class="btn-secondary btn-sm" id="plNext">Next week &rarr;</button>
+        </div>
+      </div>
+      <div class="planner-grid" id="plannerGrid"></div>
+    `;
+    byId('plPrev').addEventListener('click', () => { ui.plannerWeekOffset--; renderPlanner(); });
+    byId('plNext').addEventListener('click', () => { ui.plannerWeekOffset++; renderPlanner(); });
+    byId('plToday').addEventListener('click', () => { ui.plannerWeekOffset = 0; renderPlanner(); });
+    renderPlanner();
+  };
+
+  function renderPlanner(){
+    const grid = byId('plannerGrid');
+    if(!grid) return;
+    const weekStart = state.settings.weekStart || 1;
+    const base = addDays(todayDate(), ui.plannerWeekOffset*7);
+    let offset = (base.getDay() - weekStart + 7) % 7;
+    const start = addDays(base, -offset);
+    let html = '';
+    for(let i=0;i<7;i++){
+      const day = addDays(start, i); const iso = fmtISO(day);
+      const isToday = iso === todayISO();
+      const evs = eventsForDate(iso);
+      const sessions = state.studySessions.filter(s=>s.date===iso);
+      html += `<div class="planner-day ${isToday?'today-col':''}">
+        <div class="planner-day-head">${day.toLocaleDateString(undefined,{weekday:'short'})} <span class="planner-day-date">${day.getDate()}</span></div>
+        ${evs.map(e => `<div class="planner-item ${e.kind==='exam'?'exam-item':''}" data-ev="${e.kind}:${e.id}">${escapeHtml(e.title)}</div>`).join('')}
+        ${sessions.map(s => `<div class="planner-item study-item" data-study="${s.id}"><div class="planner-item-time">${fmtTime12(s.startTime)}</div>${escapeHtml(s.subject||'Study')} &middot; ${s.durationMin}min</div>`).join('')}
+        <button class="planner-add" data-newat="${iso}">+ Add</button>
+      </div>`;
+    }
+    grid.innerHTML = html;
+    qsa('[data-ev]', grid).forEach(evEl => evEl.addEventListener('click', () => {
+      const [kind,id] = evEl.dataset.ev.split(':');
+      if(kind==='assignment') openAssignmentModal(id); else openExamModal(id);
+    }));
+    qsa('[data-study]', grid).forEach(evEl => evEl.addEventListener('click', () => openStudySessionModal(evEl.dataset.study)));
+    qsa('[data-newat]', grid).forEach(btn => btn.addEventListener('click', () => openPlannerAddChoice(btn.dataset.newat)));
+  }
+
+  function openPlannerAddChoice(iso){
+    openModal({
+      title: 'Add to ' + shortDate(iso), small:true,
+      bodyHtml: `<p class="view-sub">What would you like to add on this day?</p>`,
+      footerHtml: `<div></div><div class="modal-footer-right" style="flex-direction:column; align-items:stretch; gap:8px;">
+        <button class="btn-secondary" id="pcAssign">Assignment</button>
+        <button class="btn-secondary" id="pcStudy">Study session</button>
+      </div>`,
+      onMount(){
+        byId('pcAssign').addEventListener('click', () => { closeModal(); openAssignmentModal(null, { due: iso }); });
+        byId('pcStudy').addEventListener('click', () => { closeModal(); openStudySessionModal(null, { date: iso }); });
+      }
+    });
+  }
+
+  /* =========================================================
+     CLASSES
+     ========================================================= */
+  VIEW_RENDERERS.classes = function(){
+    const el = byId('view-classes');
+    el.innerHTML = `
+      <div class="view-header">
+        <div><h1 class="view-title">My Classes</h1><p class="view-sub">${state.classes.length} class${state.classes.length===1?'':'es'}</p></div>
+        <div class="view-actions"><button class="btn-primary" style="width:auto;" id="classNewBtn">+ New class</button></div>
+      </div>
+      <div id="classList"></div>
+    `;
+    byId('classNewBtn').addEventListener('click', () => openClassModal(null));
+    renderClassList();
+  };
+
+  function renderClassList(){
+    const el = byId('classList'); if(!el) return;
+    if(!state.classes.length){
+      el.innerHTML = `<p class="empty-state">No classes yet.<br><button class="btn-secondary" onclick="document.getElementById('classNewBtn').click()">Add your first class</button></p>`;
+      return;
+    }
+    el.innerHTML = state.classes.map(c => {
+      const assigns = activeAssignments().filter(a => (a.classId===c.id) || (!a.classId && a.subject && a.subject.toLowerCase()===c.name.toLowerCase()));
+      const active = assigns.filter(a=>!isDone(a)).length;
+      const done = assigns.filter(isDone).length;
+      return `<div class="class-card" style="border-left-color:${c.color}" data-id="${c.id}">
+        <div class="class-card-top">
+          <div><div class="class-name">${escapeHtml(c.name)}</div><div class="class-meta">${escapeHtml(c.teacher||'')}${c.teacher&&c.room?' &middot; ':''}${escapeHtml(c.room||'')}</div></div>
+        </div>
+        <div class="class-stats"><span>${active} active</span><span>${done} completed</span><span>${(c.schedule||[]).length} weekly block${(c.schedule||[]).length===1?'':'s'}</span></div>
+      </div>`;
+    }).join('');
+    qsa('.class-card', el).forEach(card => card.addEventListener('click', () => openClassDetail(card.dataset.id)));
+  }
+
+  function openClassModal(id){
+    const existing = id ? getClass(id) : null;
+    const c = existing || { id: uid(), name:'', teacher:'', room:'', color: CLASS_COLORS[state.classes.length % CLASS_COLORS.length], schedule:[], notes:'', created:Date.now() };
+    const isNew = !existing;
+    openModal({
+      title: isNew ? 'New class' : 'Edit class',
+      bodyHtml: `
+        <div class="field"><label>Class name</label><input type="text" id="cmName" value="${escapeHtml(c.name)}" placeholder="e.g. AP Biology"></div>
+        <div class="field-row"><div class="field"><label>Teacher</label><input type="text" id="cmTeacher" value="${escapeHtml(c.teacher)}"></div>
+        <div class="field"><label>Room</label><input type="text" id="cmRoom" value="${escapeHtml(c.room)}"></div></div>
+        <div class="field"><label>Color</label><div class="color-swatches" id="cmColors">${CLASS_COLORS.map(col=>`<span class="color-swatch ${col===c.color?'selected':''}" style="background:${col}" data-c="${col}"></span>`).join('')}</div></div>
+        <div class="field"><label>Notes</label><textarea id="cmNotes">${escapeHtml(c.notes||'')}</textarea></div>
+      `,
+      footerHtml: `<div>${isNew?'':'<button class="btn-danger btn-sm" id="cmDelete">Delete class</button>'}</div>
+        <div class="modal-footer-right"><button class="btn-ghost" id="cmCancel">Cancel</button><button class="btn-primary" style="width:auto;" id="cmSave">${isNew?'Add class':'Save'}</button></div>`,
+      onMount(){
+        let color = c.color;
+        qsa('#cmColors .color-swatch').forEach(sw => sw.addEventListener('click', () => { color = sw.dataset.c; qsa('#cmColors .color-swatch').forEach(x=>x.classList.toggle('selected', x===sw)); }));
+        byId('cmCancel').addEventListener('click', closeModal);
+        if(!isNew) byId('cmDelete').addEventListener('click', () => {
+          confirmDialog('Delete "'+c.name+'"? Assignments will keep their subject label but no longer link to this class.', { confirmLabel:'Delete', onConfirm(){
+            state.classes = state.classes.filter(x=>x.id!==c.id);
+            state.assignments.forEach(a => { if(a.classId===c.id) a.classId=null; });
+            state.exams.forEach(e => { if(e.classId===c.id) e.classId=null; });
+            saveState(); closeModal(); renderCurrentView(); toast('Class deleted');
+          }});
+        });
+        byId('cmSave').addEventListener('click', () => {
+          const name = byId('cmName').value.trim();
+          if(!name){ toast('Give the class a name','error'); return; }
+          c.name = name; c.teacher = byId('cmTeacher').value.trim(); c.room = byId('cmRoom').value.trim();
+          c.color = color; c.notes = byId('cmNotes').value;
+          if(isNew) state.classes.push(c);
+          saveState(); closeModal(); renderCurrentView(); toast(isNew?'Class added':'Class saved','success');
+        });
+      }
+    });
+  }
+
+  function openClassDetail(id){
+    const c = getClass(id); if(!c) return;
+    const assigns = activeAssignments().filter(a => a.classId===c.id).sort((a,b)=>(a.due||'9999').localeCompare(b.due||'9999'));
+    const active = assigns.filter(a=>!isDone(a));
+    const done = assigns.filter(isDone);
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    openModal({
+      title: c.name, large:true,
+      bodyHtml: `
+        <p class="view-sub">${escapeHtml(c.teacher||'')}${c.teacher&&c.room?' &middot; ':''}${escapeHtml(c.room||'')}</p>
+        ${c.notes ? `<p>${escapeHtml(c.notes)}</p>` : ''}
+        <p class="card-title">Weekly schedule</p>
+        <div id="cdSchedList">${(c.schedule||[]).length ? c.schedule.slice().sort((a,b)=>a.day-b.day||a.start.localeCompare(b.start)).map(s=>`<div class="schedule-row">${dayNames[s.day]} &middot; ${fmtTime12(s.start)}&ndash;${fmtTime12(s.end)} <button class="task-delete" data-sid="${s.id}" aria-label="Remove">&times;</button></div>`).join('') : '<p class="empty-state">No weekly blocks yet.</p>'}</div>
+        <div class="schedule-editor-row">
+          <select id="cdDay">${dayNames.map((d,i)=>`<option value="${i}">${d}</option>`).join('')}</select>
+          <input type="time" id="cdStart" value="09:00">
+          <input type="time" id="cdEnd" value="09:50">
+          <button class="btn-secondary btn-sm" id="cdAddSched">Add</button>
+        </div>
+        <p class="card-title" style="margin-top:18px;">Assignments <small>${active.length} active &middot; ${done.length} completed</small></p>
+        <div>${assigns.length ? assigns.map(renderTaskRow).join('') : '<p class="empty-state">No assignments linked to this class yet.</p>'}</div>
+      `,
+      footerHtml: `<div><button class="btn-secondary btn-sm" id="cdEdit">Edit class</button></div><div class="modal-footer-right"><button class="btn-ghost" onclick="document.getElementById('modalOverlay').classList.add('hidden')">Close</button></div>`,
+      onMount(){
+        byId('cdEdit').addEventListener('click', () => openClassModal(c.id));
+        byId('cdAddSched').addEventListener('click', () => {
+          c.schedule.push({ id:uid(), day:Number(byId('cdDay').value), start:byId('cdStart').value, end:byId('cdEnd').value });
+          saveState(); closeModal(); openClassDetail(c.id);
+        });
+        qsa('[data-sid]').forEach(btn => btn.addEventListener('click', () => {
+          c.schedule = c.schedule.filter(s=>s.id!==btn.dataset.sid);
+          saveState(); closeModal(); openClassDetail(c.id);
+        }));
+      }
+    });
+  }
+
+  /* =========================================================
+     EXAMS
+     ========================================================= */
+  VIEW_RENDERERS.exams = function(){
+    const el = byId('view-exams');
+    el.innerHTML = `
+      <div class="view-header">
+        <div><h1 class="view-title">Exams</h1><p class="view-sub">Tests, quizzes and finals with a countdown.</p></div>
+        <div class="view-actions"><button class="btn-primary" style="width:auto;" id="examNewBtn">+ New exam</button></div>
+      </div>
+      <div id="examList"></div>
+    `;
+    byId('examNewBtn').addEventListener('click', () => openExamModal(null));
+    renderExamList();
+  };
+
+  function renderExamList(){
+    const el = byId('examList'); if(!el) return;
+    const upcoming = state.exams.filter(e => daysBetweenISO(todayISO(), e.date) >= 0).sort((a,b)=>a.date.localeCompare(b.date));
+    const past = state.exams.filter(e => daysBetweenISO(todayISO(), e.date) < 0).sort((a,b)=>b.date.localeCompare(a.date));
+    if(!state.exams.length){
+      el.innerHTML = `<p class="empty-state">No exams tracked yet.<br><button class="btn-secondary" onclick="document.getElementById('examNewBtn').click()">Add an exam</button></p>`;
+      return;
+    }
+    function card(e){
+      const c = getClass(e.classId);
+      const related = activeAssignments().filter(a=>a.classId===e.classId && !isDone(a)).length;
+      const diff = daysBetweenISO(todayISO(), e.date);
+      return `<div class="exam-card" data-id="${e.id}">
+        <div class="exam-top">
+          <div><div class="class-name" style="font-size:16px;">${escapeHtml(e.name)}</div><div class="class-meta">${c?escapeHtml(c.name)+' &middot; ':''}${shortDate(e.date)}${e.time?' &middot; '+fmtTime12(e.time):''}${e.location?' &middot; '+escapeHtml(e.location):''}</div></div>
+          <div class="exam-countdown ${diff<=1?'soon':''}">${examCountdown(e.date)}</div>
+        </div>
+        ${related ? `<div class="class-meta" style="margin-top:8px;">${related} related assignment${related===1?'':'s'} still open</div>` : ''}
+      </div>`;
+    }
+    el.innerHTML = (upcoming.length ? `<p class="group-title">Upcoming</p>${upcoming.map(card).join('')}` : '<p class="empty-state">No upcoming exams.</p>') +
+      (past.length ? `<p class="group-title" style="margin-top:20px;">Past</p>${past.map(card).join('')}` : '');
+    qsa('.exam-card', el).forEach(c => c.addEventListener('click', () => openExamModal(c.dataset.id)));
+  }
+
+  function openExamModal(id){
+    const existing = id ? state.exams.find(e=>e.id===id) : null;
+    const e = existing || { id: uid(), name:'', classId:'', date:'', time:'', location:'', topics:'', notes:'', created:Date.now() };
+    const isNew = !existing;
+    openModal({
+      title: isNew ? 'New exam' : 'Edit exam',
+      bodyHtml: `
+        <div class="field"><label>Exam name</label><input type="text" id="exName" value="${escapeHtml(e.name)}" placeholder="e.g. Midterm — Chapters 1-4"></div>
+        <div class="field-row"><div class="field"><label>Class</label><select id="exClass"><option value="">None</option>${state.classes.map(c=>`<option value="${c.id}" ${e.classId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join('')}</select></div>
+        <div class="field"><label>Location</label><input type="text" id="exLocation" value="${escapeHtml(e.location)}"></div></div>
+        <div class="field-row"><div class="field"><label>Date</label><input type="date" id="exDate" value="${e.date}"></div>
+        <div class="field"><label>Time</label><input type="time" id="exTime" value="${e.time}"></div></div>
+        <div class="field"><label>Topics</label><textarea id="exTopics" placeholder="What's covered">${escapeHtml(e.topics)}</textarea></div>
+        <div class="field"><label>Notes / study progress</label><textarea id="exNotes">${escapeHtml(e.notes)}</textarea></div>
+      `,
+      footerHtml: `<div>${isNew?'':'<button class="btn-danger btn-sm" id="exDelete">Delete</button>'}</div>
+        <div class="modal-footer-right"><button class="btn-ghost" id="exCancel">Cancel</button><button class="btn-primary" style="width:auto;" id="exSave">${isNew?'Add exam':'Save'}</button></div>`,
+      onMount(){
+        byId('exCancel').addEventListener('click', closeModal);
+        if(!isNew) byId('exDelete').addEventListener('click', () => {
+          confirmDialog('Delete "'+e.name+'"?', { confirmLabel:'Delete', onConfirm(){
+            state.exams = state.exams.filter(x=>x.id!==e.id); saveState(); closeModal(); renderCurrentView(); toast('Exam deleted');
+          }});
+        });
+        byId('exSave').addEventListener('click', () => {
+          const name = byId('exName').value.trim();
+          const date = byId('exDate').value;
+          if(!name || !date){ toast('Exam needs a name and date', 'error'); return; }
+          e.name = name; e.classId = byId('exClass').value || null; e.location = byId('exLocation').value.trim();
+          e.date = date; e.time = byId('exTime').value; e.topics = byId('exTopics').value; e.notes = byId('exNotes').value;
+          if(isNew){ state.exams.push(e); logActivity('add','Added exam "'+e.name+'"'); } else { logActivity('edit','Edited exam "'+e.name+'"'); }
+          saveState(); closeModal(); renderCurrentView(); toast(isNew?'Exam added':'Saved','success');
+        });
+      }
+    });
+  }
+
+  /* =========================================================
+     NOTES
+     ========================================================= */
+  VIEW_RENDERERS.notes = function(){
+    const el = byId('view-notes');
+    el.innerHTML = `
+      <div class="view-header">
+        <div><h1 class="view-title">Notes</h1><p class="view-sub">${state.notes.length} note${state.notes.length===1?'':'s'}</p></div>
+        <div class="view-actions"><button class="btn-primary" style="width:auto;" id="noteNewBtn">+ New note</button></div>
+      </div>
+      <div class="toolbar"><input type="text" id="noteSearch" placeholder="Search notes&hellip;" style="flex:1;"></div>
+      <div id="noteList"></div>
+    `;
+    byId('noteNewBtn').addEventListener('click', () => openNoteModal(null));
+    byId('noteSearch').addEventListener('input', (e) => renderNoteList(e.target.value.trim().toLowerCase()));
+    renderNoteList('');
+  };
+
+  function renderNoteList(q){
+    const el = byId('noteList'); if(!el) return;
+    let list = state.notes.slice().sort((a,b)=>b.modified-a.modified);
+    if(q) list = list.filter(n => (n.title+' '+n.body+' '+n.tags.join(' ')).toLowerCase().includes(q));
+    if(!list.length){ el.innerHTML = `<p class="empty-state">${state.notes.length?'No notes match your search.':'No notes yet. Capture something from class.'}</p>`; return; }
+    el.innerHTML = list.map(n => `<div class="note-card" data-id="${n.id}">
+      <div class="note-title">${escapeHtml(n.title||'Untitled note')}</div>
+      <div class="note-preview">${escapeHtml(n.body||'')}</div>
+      <div class="note-meta">${n.subject?escapeHtml(n.subject)+' &middot; ':''}${new Date(n.modified).toLocaleDateString(undefined,{month:'short',day:'numeric'})}</div>
+    </div>`).join('');
+    qsa('.note-card', el).forEach(c => c.addEventListener('click', () => openNoteModal(c.dataset.id)));
+  }
+
+  function openNoteModal(id){
+    const existing = id ? state.notes.find(n=>n.id===id) : null;
+    const n = existing || { id: uid(), title:'', body:'', subject:'', tags:[], created:Date.now(), modified:Date.now() };
+    const isNew = !existing;
+    openModal({
+      title: isNew ? 'New note' : 'Edit note', large:true,
+      bodyHtml: `
+        <div class="field"><label>Title</label><input type="text" id="ntTitle" value="${escapeHtml(n.title)}"></div>
+        <div class="field-row"><div class="field"><label>Subject</label><input type="text" id="ntSubject" value="${escapeHtml(n.subject)}" list="subjectDataList"></div>
+        <div class="field"><label>Tags (comma-separated)</label><input type="text" id="ntTags" value="${escapeHtml((n.tags||[]).join(', '))}"></div></div>
+        <div class="field"><label>Body</label><textarea id="ntBody" style="min-height:200px;">${escapeHtml(n.body)}</textarea></div>
+        <datalist id="subjectDataList">${state.classes.map(c=>`<option value="${escapeHtml(c.name)}">`).join('')}</datalist>
+      `,
+      footerHtml: `<div>${isNew?'':'<button class="btn-danger btn-sm" id="ntDelete">Delete</button>'}</div>
+        <div class="modal-footer-right"><button class="btn-ghost" id="ntCancel">Cancel</button><button class="btn-primary" style="width:auto;" id="ntSave">${isNew?'Save note':'Save'}</button></div>`,
+      onMount(){
+        byId('ntCancel').addEventListener('click', closeModal);
+        if(!isNew) byId('ntDelete').addEventListener('click', () => {
+          confirmDialog('Delete this note?', { confirmLabel:'Delete', onConfirm(){
+            state.notes = state.notes.filter(x=>x.id!==n.id); saveState(); closeModal(); renderCurrentView(); toast('Note deleted');
+          }});
+        });
+        byId('ntSave').addEventListener('click', () => {
+          n.title = byId('ntTitle').value.trim() || 'Untitled note';
+          n.subject = byId('ntSubject').value.trim();
+          n.tags = byId('ntTags').value.split(',').map(t=>t.trim()).filter(Boolean);
+          n.body = byId('ntBody').value;
+          n.modified = Date.now();
+          if(isNew){ state.notes.push(n); logActivity('note','Added note "'+n.title+'"'); } else { logActivity('note','Edited note "'+n.title+'"'); }
+          saveState(); closeModal(); renderCurrentView(); toast('Note saved','success');
+        });
+      }
+    });
+  }
+
+  /* =========================================================
+     STATS / INSIGHTS
+     ========================================================= */
+  VIEW_RENDERERS.stats = function(){
+    const el = byId('view-stats');
+    const all = activeAssignments();
+    const done = all.filter(isDone).length;
+    const remaining = all.length - done;
+    const pct = all.length ? Math.round((done/all.length)*100) : 0;
+    const weekAgo = fmtISO(addDays(todayDate(),-7));
+    const monthAgo = fmtISO(addDays(todayDate(),-30));
+    const doneThisWeek = all.filter(a=>isDone(a)&&a.modified&&fmtISO(new Date(a.modified))>=weekAgo).length;
+    const doneThisMonth = all.filter(a=>isDone(a)&&a.modified&&fmtISO(new Date(a.modified))>=monthAgo).length;
+    const totalStudyMin = state.studySessions.filter(s=>s.completed).reduce((sum,s)=>sum+(s.actualMin||s.durationMin||0),0);
+    const weekStudyMin = state.studySessions.filter(s=>s.completed && s.date>=weekAgo).reduce((sum,s)=>sum+(s.actualMin||s.durationMin||0),0);
+
+    const bySubject = {};
+    all.filter(a=>!isDone(a)).forEach(a => { const s = subjectLabel(a) || 'No subject'; bySubject[s] = (bySubject[s]||0)+1; });
+    const subjectEntries = Object.entries(bySubject).sort((a,b)=>b[1]-a[1]);
+    const maxSubj = Math.max(1, ...subjectEntries.map(e=>e[1]));
+
+    const next7 = {};
+    for(let i=0;i<7;i++){ next7[fmtISO(addDays(todayDate(),i))] = 0; }
+    all.filter(a=>!isDone(a) && a.due && next7.hasOwnProperty(a.due)).forEach(a => next7[a.due]++);
+    const maxWorkload = Math.max(1, ...Object.values(next7));
+
+    el.innerHTML = `
+      <div class="view-header"><div><h1 class="view-title">Insights</h1><p class="view-sub">A snapshot of your workload and habits.</p></div></div>
+      <div class="grid-stats">
+        <div class="stat-card"><div class="stat-num">${done}</div><div class="stat-label">Completed</div></div>
+        <div class="stat-card"><div class="stat-num">${remaining}</div><div class="stat-label">Remaining</div></div>
+        <div class="stat-card"><div class="stat-num">${pct}%</div><div class="stat-label">Completion rate</div></div>
+        <div class="stat-card"><div class="stat-num">${computeStreak()}</div><div class="stat-label">Day streak</div></div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <div class="card"><p class="card-title">Workload by subject <small>active only</small></p>
+            ${subjectEntries.length ? subjectEntries.map(([s,n]) => `<div class="bar-chart-row"><span class="bar-chart-label">${escapeHtml(s)}</span><span class="bar-chart-track"><span class="bar-chart-fill" style="width:${(n/maxSubj)*100}%"></span></span><span class="bar-chart-val">${n}</span></div>`).join('') : '<p class="empty-state">Nothing active right now.</p>'}
+          </div>
+          <div class="card"><p class="card-title">Upcoming workload <small>next 7 days</small></p>
+            ${Object.entries(next7).map(([iso,n]) => `<div class="bar-chart-row"><span class="bar-chart-label">${weekdayName(iso).slice(0,3)} ${shortDate(iso)}</span><span class="bar-chart-track"><span class="bar-chart-fill" style="width:${(n/maxWorkload)*100}%"></span></span><span class="bar-chart-val">${n}</span></div>`).join('')}
+          </div>
+        </div>
+        <div>
+          <div class="card"><p class="card-title">Completed</p>
+            <div class="bar-chart-row"><span class="bar-chart-label">This week</span><span class="bar-chart-val" style="width:auto;">${doneThisWeek}</span></div>
+            <div class="bar-chart-row"><span class="bar-chart-label">This month</span><span class="bar-chart-val" style="width:auto;">${doneThisMonth}</span></div>
+          </div>
+          <div class="card"><p class="card-title">Study time</p>
+            <div class="bar-chart-row"><span class="bar-chart-label">This week</span><span class="bar-chart-val" style="width:auto;">${weekStudyMin} min</span></div>
+            <div class="bar-chart-row"><span class="bar-chart-label">All time</span><span class="bar-chart-val" style="width:auto;">${totalStudyMin} min</span></div>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  /* =========================================================
+     STUDY SESSIONS + TIMER
+     ========================================================= */
+  function openStudySessionModal(id, prefill){
+    const existing = id ? state.studySessions.find(s=>s.id===id) : null;
+    const s = existing || { id: uid(), subject:'', classId:null, assignmentId:null, date: todayISO(), startTime: nowHM(), durationMin: state.settings.defaultDuration||30, completed:false, actualMin:0, created:Date.now() };
+    Object.assign(s, prefill||{});
+    const isNew = !existing;
+    openModal({
+      title: isNew ? 'New study session' : 'Study session',
+      bodyHtml: `
+        <div class="field-row"><div class="field"><label>Class</label><select id="ssClass"><option value="">None</option>${state.classes.map(c=>`<option value="${c.id}" ${s.classId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join('')}</select></div>
+        <div class="field"><label>Linked assignment</label><select id="ssAssign"><option value="">None</option>${activeAssignments().filter(a=>!isDone(a)).map(a=>`<option value="${a.id}" ${s.assignmentId===a.id?'selected':''}>${escapeHtml(a.title)}</option>`).join('')}</select></div></div>
+        <div class="field-row3"><div class="field"><label>Date</label><input type="date" id="ssDate" value="${s.date}"></div>
+        <div class="field"><label>Start time</label><input type="time" id="ssStart" value="${s.startTime}"></div>
+        <div class="field"><label>Duration (min)</label><input type="number" min="5" step="5" id="ssDuration" value="${s.durationMin}"></div></div>
+        <div class="timer-display">
+          <div class="timer-clock mono" id="timerClock">${fmtClock((s.remainingSec!=null?s.remainingSec:s.durationMin*60))}</div>
+          <div class="timer-controls">
+            <button class="btn-secondary btn-sm" id="timerStart">Start</button>
+            <button class="btn-secondary btn-sm" id="timerPause">Pause</button>
+            <button class="btn-secondary btn-sm" id="timerReset">Reset</button>
+            <button class="btn-primary" style="width:auto;" id="timerFinish">Finish</button>
+          </div>
+        </div>
+      `,
+      footerHtml: `<div>${isNew?'':'<button class="btn-danger btn-sm" id="ssDelete">Delete</button>'}</div>
+        <div class="modal-footer-right"><button class="btn-ghost" id="ssCancel">Close</button><button class="btn-primary" style="width:auto;" id="ssSave">${isNew?'Save session':'Save'}</button></div>`,
+      onMount(){
+        stopTimer(true);
+        let remaining = (s.durationMin||30) * 60;
+        ui.timer = { interval:null, remaining, running:false };
+        function updateClock(){ byId('timerClock').textContent = fmtClock(ui.timer.remaining); }
+        byId('timerStart').addEventListener('click', () => {
+          if(ui.timer.running) return;
+          ui.timer.running = true;
+          ui.timer.interval = setInterval(() => {
+            ui.timer.remaining = Math.max(0, ui.timer.remaining - 1);
+            updateClock();
+            if(ui.timer.remaining === 0){ stopTimer(); toast('Time\u2019s up — nice work.'); }
+          }, 1000);
+        });
+        byId('timerPause').addEventListener('click', () => stopTimer());
+        byId('timerReset').addEventListener('click', () => { stopTimer(); ui.timer.remaining = Number(byId('ssDuration').value||30)*60; updateClock(); });
+        byId('timerFinish').addEventListener('click', () => {
+          const elapsedMin = Math.round((((Number(byId('ssDuration').value||30)*60) - ui.timer.remaining))/60);
+          s.completed = true; s.actualMin = Math.max(elapsedMin, 1);
+          stopTimer(true);
+          persistSession();
+          logActivity('study', 'Finished a study session' + (s.subject?(' — '+s.subject):''));
+          toast('Study session logged', 'success');
+          closeModal(); renderCurrentView();
+        });
+        byId('ssDuration').addEventListener('change', () => { ui.timer.remaining = Number(byId('ssDuration').value||30)*60; updateClock(); });
+        byId('ssCancel').addEventListener('click', () => { stopTimer(true); closeModal(); });
+        if(!isNew) byId('ssDelete').addEventListener('click', () => {
+          confirmDialog('Delete this study session?', { confirmLabel:'Delete', onConfirm(){
+            state.studySessions = state.studySessions.filter(x=>x.id!==s.id);
+            saveState(); stopTimer(true); closeModal(); renderCurrentView(); toast('Session deleted');
+          }});
+        });
+        function persistSession(){
+          const cls = getClass(byId('ssClass').value);
+          s.classId = cls?cls.id:null;
+          s.subject = cls?cls.name:s.subject;
+          s.assignmentId = byId('ssAssign').value || null;
+          s.date = byId('ssDate').value;
+          s.startTime = byId('ssStart').value;
+          s.durationMin = Number(byId('ssDuration').value||30);
+          if(isNew && !state.studySessions.find(x=>x.id===s.id)) state.studySessions.push(s);
+          saveState();
+        }
+        byId('ssSave').addEventListener('click', () => {
+          persistSession();
+          toast('Session saved', 'success');
+          stopTimer(true);
+          closeModal(); renderCurrentView();
+        });
+      }
+    });
+  }
+  function fmtClock(totalSec){ const m = Math.floor(totalSec/60), s = totalSec%60; return pad2(m)+':'+pad2(s); }
+  function stopTimer(clear){
+    if(ui.timer && ui.timer.interval){ clearInterval(ui.timer.interval); ui.timer.interval = null; ui.timer.running = false; }
+    if(clear) ui.timer = null;
+  }
+
+  /* =========================================================
+     SETTINGS
+     ========================================================= */
+  VIEW_RENDERERS.settings = function(){
+    const el = byId('view-settings');
+    const cv = state.settings.canvas || {};
+    el.innerHTML = `
+      <div class="view-header"><div><h1 class="view-title">Settings</h1><p class="view-sub">Profile, appearance, data and Canvas.</p></div></div>
+
+      <div class="settings-section">
+        <h3>Profile</h3>
+        <div class="settings-row"><span class="settings-row-label">Name</span><span class="mono">${escapeHtml(currentUser)}</span></div>
+        ${currentAccount ? `<div class="settings-row"><span class="settings-row-label">Email</span><span class="mono">${escapeHtml(currentAccount.email)}</span></div>
+        <div class="settings-row"><span class="settings-row-label">Password</span><button type="button" class="btn-ghost" id="changePwBtn">Change password</button></div>` : `<div class="settings-row"><span class="settings-row-label">Account</span><span class="mono">Demo mode (not saved to a server)</span></div>`}
+      </div>
+
+      <div class="settings-section">
+        <h3>Appearance</h3>
+        <div class="settings-row"><span class="settings-row-label">Theme</span>
+          <div class="segmented" id="setTheme" style="width:220px;">
+            <button type="button" data-v="light" class="${state.settings.theme==='light'?'active':''}">Light</button>
+            <button type="button" data-v="dark" class="${state.settings.theme==='dark'?'active':''}">Dark</button>
+            <button type="button" data-v="system" class="${state.settings.theme==='system'?'active':''}">System</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Productivity</h3>
+        <div class="settings-row"><span class="settings-row-label">Default assignment duration (min)</span><input type="number" id="setDuration" value="${state.settings.defaultDuration}" style="width:80px;" min="5" step="5"></div>
+        <div class="settings-row"><span class="settings-row-label">Week starts on</span>
+          <div class="segmented" id="setWeekStart" style="width:180px;"><button type="button" data-v="1" class="${state.settings.weekStart===1?'active':''}">Monday</button><button type="button" data-v="0" class="${state.settings.weekStart===0?'active':''}">Sunday</button></div>
+        </div>
+        <div class="settings-row"><span class="settings-row-label">Default calendar view</span>
+          <div class="segmented" id="setCalView" style="width:220px;"><button type="button" data-v="month" class="${state.settings.defaultCalendarView==='month'?'active':''}">Month</button><button type="button" data-v="week" class="${state.settings.defaultCalendarView==='week'?'active':''}">Week</button><button type="button" data-v="day" class="${state.settings.defaultCalendarView==='day'?'active':''}">Day</button></div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Notifications</h3>
+        <div class="settings-row"><div><div class="settings-row-label">Reminders</div><div class="settings-row-hint">Browser reminders for things due soon (best-effort; requires this tab to stay open).</div></div>
+          <button class="switch ${state.settings.notifications?'on':''}" id="setNotif"></button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Canvas</h3>
+        <div class="canvas-panel">
+          <p class="canvas-panel-hint">In Canvas, go to Account &rarr; Settings &rarr; New Access Token, then paste your school's Canvas domain (e.g. <span class="serif">yourschool.instructure.com</span>) and the token below. The token is stored only in this browser and sent only to Canvas — treat it like a password, and revoke it in Canvas if you stop using this. Most school networks block these requests from outside pages (CORS); if sync fails, that's almost certainly why and there's no workaround from a page like this one.</p>
+          <div class="canvas-row">
+            <input type="text" id="canvasDomainInput" placeholder="yourschool.instructure.com" value="${escapeHtml(cv.domain||'')}" autocomplete="off">
+            <input type="password" id="canvasTokenInput" placeholder="${cv.token?'Token saved — enter to replace':'Access token'}" autocomplete="off">
+            <button class="btn-secondary" id="canvasSyncBtn">${cv.connected?'Sync now':'Connect &amp; sync'}</button>
+            ${cv.connected ? '<button class="btn-danger btn-sm" id="canvasDisconnectBtn">Disconnect</button>' : ''}
+          </div>
+          <p class="canvas-status" id="canvasStatus">${cv.lastSynced ? 'Last synced ' + new Date(cv.lastSynced).toLocaleString() : '&nbsp;'}</p>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Data</h3>
+        <div class="settings-row"><div><div class="settings-row-label">Export all data</div><div class="settings-row-hint">Assignments, classes, exams, notes, schedule, study sessions and settings as JSON.</div></div><button class="btn-secondary btn-sm" id="exportJsonBtn">Export JSON</button></div>
+        <div class="settings-row"><div><div class="settings-row-label">Export assignments as CSV</div></div><button class="btn-secondary btn-sm" id="exportCsvBtn">Export CSV</button></div>
+        <div class="settings-row"><div><div class="settings-row-label">Import data</div><div class="settings-row-hint">Replaces current data for this account with a previously exported file.</div></div><button class="btn-secondary btn-sm" id="importJsonBtn">Import JSON</button></div>
+        <div class="settings-row"><div><div class="settings-row-label">Import from a local account</div><div class="settings-row-hint">Bring in data saved in this browser from demo mode or an earlier login.</div></div><button class="btn-secondary btn-sm" id="importLocalBtn">Find local accounts</button></div>
+        <div class="settings-row"><div><div class="settings-row-label">Load demo data</div></div><button class="btn-secondary btn-sm" id="loadDemoBtn">Load demo data</button></div>
+        ${state.ui.demo ? `<div class="settings-row"><div><div class="settings-row-label">Remove demo data</div></div><button class="btn-secondary btn-sm" id="removeDemoBtn">Remove demo data</button></div>` : ''}
+        <div class="settings-row"><div><div class="settings-row-label">Clear all data</div><div class="settings-row-hint">Permanently deletes everything for this account.</div></div><button class="btn-danger btn-sm" id="clearDataBtn">Clear data</button></div>
+      </div>
+    `;
+
+    if(byId('changePwBtn')) byId('changePwBtn').addEventListener('click', openChangePasswordModal);
+    qsa('#setTheme button').forEach(b => b.addEventListener('click', () => { state.settings.theme=b.dataset.v; saveState(); applyTheme(); renderCurrentView(); }));
+    byId('setDuration').addEventListener('change', (e) => { state.settings.defaultDuration = Number(e.target.value)||30; saveState(); });
+    qsa('#setWeekStart button').forEach(b => b.addEventListener('click', () => { state.settings.weekStart=Number(b.dataset.v); saveState(); renderCurrentView(); }));
+    qsa('#setCalView button').forEach(b => b.addEventListener('click', () => { state.settings.defaultCalendarView=b.dataset.v; ui.calView=b.dataset.v; saveState(); }));
+    byId('setNotif').addEventListener('click', () => {
+      state.settings.notifications = !state.settings.notifications;
+      if(state.settings.notifications && 'Notification' in window){ try{ Notification.requestPermission(); }catch(e){} }
+      saveState(); renderCurrentView();
+    });
+    byId('canvasSyncBtn').addEventListener('click', syncCanvas);
+    const disc = byId('canvasDisconnectBtn'); if(disc) disc.addEventListener('click', () => {
+      confirmDialog('Disconnect Canvas? Previously imported assignments will stay in Docket.', { confirmLabel:'Disconnect', onConfirm(){
+        state.settings.canvas = { domain:'', token:'', lastSynced:null, connected:false };
+        saveState(); renderCurrentView(); toast('Canvas disconnected');
+      }});
+    });
+    byId('exportJsonBtn').addEventListener('click', exportJson);
+    byId('exportCsvBtn').addEventListener('click', exportCsv);
+    byId('importJsonBtn').addEventListener('click', () => byId('importFileInput').click());
+    byId('importLocalBtn').addEventListener('click', openImportLocalModal);
+    byId('loadDemoBtn').addEventListener('click', () => {
+      confirmDialog('Load demo data alongside your current data?', { confirmLabel:'Load demo data', danger:false, onConfirm(){
+        seedDemoData(); saveState(); renderCurrentView(); toast('Demo data loaded');
+      }});
+    });
+    const rmDemo = byId('removeDemoBtn'); if(rmDemo) rmDemo.addEventListener('click', () => {
+      confirmDialog('Remove all demo data?', { confirmLabel:'Remove', onConfirm(){
+        removeDemoData(); saveState(); renderCurrentView(); toast('Demo data removed');
+      }});
+    });
+    byId('clearDataBtn').addEventListener('click', () => {
+      confirmDialog('Clear ALL Docket data for ' + currentUser + '? This cannot be undone.', { confirmLabel:'Clear everything', onConfirm(){
+        state = defaultState(currentUser);
+        saveState(); renderCurrentView(); toast('All data cleared');
+      }});
+    });
+  };
+
+  function openChangePasswordModal(){
+    openModal({
+      title: 'Change password',
+      bodyHtml: `
+        <label class="field-label" for="cpCurrent">Current password</label>
+        <input type="password" id="cpCurrent" style="width:100%;padding:10px 4px;border:none;border-bottom:1.5px solid var(--ink);background:transparent;outline:none;margin-bottom:16px;" autocomplete="current-password">
+        <label class="field-label" for="cpNew">New password</label>
+        <input type="password" id="cpNew" style="width:100%;padding:10px 4px;border:none;border-bottom:1.5px solid var(--ink);background:transparent;outline:none;margin-bottom:16px;" autocomplete="new-password" minlength="8">
+        <p id="cpError" style="color:var(--overdue);font-size:12.5px;min-height:16px;margin:0;"></p>
+      `,
+      footerHtml: `<button class="btn-ghost" id="cpCancel">Cancel</button>
+        <div class="modal-footer-right"><button class="btn-primary" id="cpSubmit" style="width:auto;">Update password</button></div>`,
+      small: true,
+      onMount(){
+        byId('cpCancel').addEventListener('click', closeModal);
+        byId('cpSubmit').addEventListener('click', async () => {
+          const cur = byId('cpCurrent').value;
+          const next = byId('cpNew').value;
+          const err = byId('cpError');
+          if(!cur || !next){ err.textContent = 'Fill in both fields.'; return; }
+          if(next.length < 8){ err.textContent = 'New password must be at least 8 characters.'; return; }
+          byId('cpSubmit').disabled = true;
+          const res = await Api.changePassword(cur, next);
+          byId('cpSubmit').disabled = false;
+          if(!res.ok){ err.textContent = res.error; return; }
+          closeModal();
+          toast('Password updated');
+        });
+      }
+    });
+  }
+
+  async function syncCanvas(){
+    const domainRaw = byId('canvasDomainInput').value.trim();
+    const tokenInput = byId('canvasTokenInput').value.trim();
+    const token = tokenInput || state.settings.canvas.token;
+    if(!domainRaw || !token){ byId('canvasStatus').textContent = 'Enter both your Canvas domain and access token.'; return; }
+    const domain = domainRaw.replace(/^https?:\/\//i,'').replace(/\/+$/,'');
+    state.settings.canvas.domain = domain;
+    state.settings.canvas.token = token;
+    saveState();
+    const statusEl = byId('canvasStatus');
+    statusEl.textContent = 'Syncing\u2026';
+    byId('canvasSyncBtn').disabled = true;
+    try{
+      const coursesRes = await fetch(`https://${domain}/api/v1/courses?enrollment_state=active&per_page=100`, { headers:{ 'Authorization':'Bearer '+token } });
+      if(!coursesRes.ok) throw new Error('Canvas returned ' + coursesRes.status + ' fetching courses');
+      const courses = await coursesRes.json();
+      if(!Array.isArray(courses)) throw new Error('Unexpected response from Canvas');
+      let imported=0, updated=0;
+      for(const course of courses){
+        if(!course || !course.id || course.access_restricted_by_date) continue;
+        const courseName = course.course_code || course.name || 'Canvas';
+        let cls = state.classes.find(c => c.name.toLowerCase() === courseName.toLowerCase());
+        if(!cls){
+          cls = { id:uid(), name: courseName, teacher:'', room:'', color: CLASS_COLORS[state.classes.length % CLASS_COLORS.length], schedule:[], notes:'', created:Date.now(), fromCanvas:true };
+          state.classes.push(cls);
+        }
+        let assignments = [];
+        try{
+          const aRes = await fetch(`https://${domain}/api/v1/courses/${course.id}/assignments?per_page=100&order_by=due_at`, { headers:{ 'Authorization':'Bearer '+token } });
+          if(!aRes.ok) continue;
+          assignments = await aRes.json();
+        }catch(e){ continue; }
+        assignments.forEach(a => {
+          if(!a || !a.due_at) return;
+          const cid = 'canvas-' + a.id;
+          const due = a.due_at.slice(0,10);
+          const existing = state.assignments.find(t => t.id===cid || t.canvasId===a.id);
+          if(existing){
+            existing.title = a.name || existing.title;
+            existing.due = due;
+            existing.classId = cls.id;
+            existing.subject = cls.name;
+            existing.modified = Date.now();
+            updated++;
+          } else {
+            state.assignments.push(newAssignment({
+              id: cid, title: a.name || 'Untitled assignment', classId: cls.id, subject: cls.name, due,
+              status: a.has_submitted_submissions ? 'completed' : 'not-started',
+              progress: a.has_submitted_submissions ? 100 : 0,
+              source:'canvas', canvasId: a.id
+            }));
+            imported++;
+          }
+        });
+      }
+      state.settings.canvas.connected = true;
+      state.settings.canvas.lastSynced = Date.now();
+      logActivity('canvas', 'Synced Canvas — ' + imported + ' new, ' + updated + ' updated');
+      saveState();
+      statusEl.textContent = `Synced \u2014 ${imported} new, ${updated} updated. Last synced ${new Date(state.settings.canvas.lastSynced).toLocaleString()}.`;
+      toast('Canvas synced', 'success');
+      renderCurrentView();
+    }catch(e){
+      statusEl.textContent = 'Could not reach Canvas (' + e.message + '). Most schools block direct browser requests to Canvas from outside pages (CORS) \u2014 if this keeps failing, that\u2019s almost certainly why, and there isn\u2019t a workaround from a page like this one.';
+    } finally {
+      byId('canvasSyncBtn').disabled = false;
+    }
+  }
+
+  /* ---------- import / export ---------- */
+  function exportJson(){
+    const payload = { exportedAt: new Date().toISOString(), user: currentUser, data: state };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+    downloadBlob(blob, 'docket-' + currentUser.toLowerCase().replace(/\s+/g,'-') + '.json');
+    toast('Exported JSON');
+  }
+  function exportCsv(){
+    const rows = [['Title','Subject','Due Date','Due Time','Priority','Type','Status','Progress','Estimate (min)','Tags']];
+    activeAssignments().forEach(a => rows.push([a.title, subjectLabel(a), a.due, a.dueTime, a.priority, a.type, a.status, a.progress, a.estimate||'', a.tags.join('; ')]));
+    const csv = rows.map(r => r.map(v => '"' + String(v==null?'':v).replace(/"/g,'""') + '"').join(',')).join('\n');
+    const blob = new Blob([csv], { type:'text/csv' });
+    downloadBlob(blob, 'docket-assignments-' + currentUser.toLowerCase().replace(/\s+/g,'-') + '.csv');
+    toast('Exported CSV');
+  }
+  function downloadBlob(blob, filename){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  byId('importFileInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try{
+        const parsed = JSON.parse(reader.result);
+        const incoming = parsed && parsed.data ? parsed.data : parsed;
+        if(!incoming || typeof incoming !== 'object') throw new Error('bad file');
+        confirmDialog('Import this file? It will replace your current Docket data for ' + currentUser + '.', {
+          confirmLabel:'Import', onConfirm(){
+            state = migrateState(Object.assign(defaultState(currentUser), incoming, { user: currentUser }));
+            saveState(); renderCurrentView(); toast('Data imported', 'success');
+          }
+        });
+      }catch(err){ toast('That file doesn\u2019t look like a valid Docket export.', 'error'); }
+      e.target.value = '';
+    };
+    reader.readAsText(file);
+  });
+
+  /* ---------- import from another local account on this device ----------
+     Finds Docket data saved in this browser under a different name (e.g.
+     demo mode, or an account from before this device was pointed at the
+     current Supabase backend) and lets it be merged or copied into the
+     currently signed-in account. Nothing here reaches across browsers or
+     devices — it only reads localStorage.getItem(). */
+  function findLocalAccounts(){
+    const prefix = STORAGE_PREFIX + ':data:v2:';
+    const found = [];
+    try{
+      for(let i=0;i<localStorage.length;i++){
+        const key = localStorage.key(i);
+        if(!key || key.indexOf(prefix) !== 0) continue;
+        let parsed;
+        try{ parsed = JSON.parse(localStorage.getItem(key)); }catch(e){ continue; }
+        if(!parsed || typeof parsed !== 'object') continue;
+        found.push({
+          key,
+          username: key.slice(prefix.length),
+          counts: {
+            assignments: Array.isArray(parsed.assignments) ? parsed.assignments.length : 0,
+            classes: Array.isArray(parsed.classes) ? parsed.classes.length : 0,
+            notes: Array.isArray(parsed.notes) ? parsed.notes.length : 0
+          }
+        });
+      }
+    }catch(e){}
+    return found;
+  }
+
+  // Adds an incoming state's data into the currently loaded `state`, matching
+  // classes by name (so "Biology" in both doesn't become two separate
+  // classes) and giving everything else fresh ids so nothing collides.
+  function mergeIncomingState(raw){
+    const incoming = migrateState(Object.assign(defaultState(raw.user || 'Imported'), raw));
+    const classIdMap = {};
+    incoming.classes.forEach(c => {
+      const existing = state.classes.find(ec => ec.name.trim().toLowerCase() === (c.name||'').trim().toLowerCase());
+      if(existing){ classIdMap[c.id] = existing.id; }
+      else{ const copy = Object.assign({}, c, { id: uid() }); classIdMap[c.id] = copy.id; state.classes.push(copy); }
+    });
+    incoming.assignments.forEach(a => {
+      const copy = Object.assign({}, a, { id: uid() });
+      if(copy.classId && classIdMap[copy.classId]) copy.classId = classIdMap[copy.classId];
+      linkAssignmentToClass(copy);
+      state.assignments.push(copy);
+    });
+    incoming.exams.forEach(x => state.exams.push(Object.assign({}, x, { id: uid() })));
+    incoming.notes.forEach(n => state.notes.push(Object.assign({}, n, { id: uid() })));
+    incoming.studySessions.forEach(s => state.studySessions.push(Object.assign({}, s, { id: uid() })));
+    logActivity('import', 'Merged in data from a local account (' + (raw.user || 'unnamed') + ')');
+  }
+
+  function openImportLocalModal(){
+    const accounts = findLocalAccounts();
+    if(!accounts.length){ toast('No local Docket data found in this browser.', 'error'); return; }
+    const rows = accounts.map(acc => `
+      <div class="settings-row" style="align-items:flex-start;">
+        <div>
+          <div class="settings-row-label">${escapeHtml(acc.username)}</div>
+          <div class="settings-row-hint">${acc.counts.assignments} assignment${acc.counts.assignments===1?'':'s'}, ${acc.counts.classes} class${acc.counts.classes===1?'':'es'}, ${acc.counts.notes} note${acc.counts.notes===1?'':'s'}</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0;">
+          <button type="button" class="btn-secondary btn-sm" data-key="${escapeHtml(acc.key)}" data-mode="merge">Merge in</button>
+          <button type="button" class="btn-danger btn-sm" data-key="${escapeHtml(acc.key)}" data-mode="replace">Replace current</button>
+        </div>
+      </div>
+    `).join('');
+    openModal({
+      title: 'Import from a local account',
+      bodyHtml: `<p style="margin:0 0 12px;color:var(--muted);font-size:13px;">Docket data saved in this browser — from demo mode or an earlier login. <strong>Merge in</strong> adds it alongside ${escapeHtml(currentUser)}'s current data (matching classes by name). <strong>Replace current</strong> wipes ${escapeHtml(currentUser)}'s current data first.</p>${rows}`,
+      footerHtml: `<button class="btn-ghost" id="ilCancel">Close</button>`,
+      onMount(){
+        byId('ilCancel').addEventListener('click', closeModal);
+        qsa('#modalBody button[data-key]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const key = btn.dataset.key, mode = btn.dataset.mode;
+            let incoming;
+            try{ incoming = JSON.parse(localStorage.getItem(key)); }catch(e){ toast('Could not read that local account.', 'error'); return; }
+            closeModal();
+            confirmDialog(
+              mode === 'replace'
+                ? 'Replace all of ' + currentUser + '\u2019s current data with this local account\u2019s data? This can\u2019t be undone.'
+                : 'Merge this local account\u2019s data into ' + currentUser + '\u2019s account?',
+              {
+                confirmLabel: mode === 'replace' ? 'Replace' : 'Merge',
+                onConfirm(){
+                  if(mode === 'replace'){
+                    state = migrateState(Object.assign(defaultState(currentUser), incoming, { user: currentUser }));
+                  } else {
+                    mergeIncomingState(incoming);
+                  }
+                  saveState(); renderCurrentView();
+                  toast(mode === 'replace' ? 'Data replaced' : 'Data merged in', 'success');
+                }
+              }
+            );
+          });
+        });
+      }
+    });
+  }
+
+  /* =========================================================
+     GLOBAL SEARCH
+     ========================================================= */
+  function openSearchModal(){
+    openModal({
+      title: 'Search', large:true,
+      bodyHtml: `<input type="text" id="searchInput" class="search-input-lg" placeholder="Search assignments, classes, exams, notes&hellip;">
+        <div id="searchResults" style="margin-top:10px;"></div>`,
+      onMount(){
+        byId('searchInput').addEventListener('input', (e) => renderSearchResults(e.target.value.trim().toLowerCase()));
+        byId('searchInput').addEventListener('keydown', (e) => { if(e.key==='Escape') closeModal(); });
+        renderSearchResults('');
+      }
+    });
+  }
+  function renderSearchResults(q){
+    const el = byId('searchResults'); if(!el) return;
+    if(!q){ el.innerHTML = `<p class="empty-state">Type to search across everything in Docket.</p>`; return; }
+    const results = [];
+    activeAssignments().forEach(a => { if((a.title+' '+subjectLabel(a)+' '+a.tags.join(' ')).toLowerCase().includes(q)) results.push({ type:'Assignment', title:a.title, sub: subjectLabel(a), action:()=>openAssignmentModal(a.id) }); });
+    state.classes.forEach(c => { if((c.name+' '+(c.teacher||'')).toLowerCase().includes(q)) results.push({ type:'Class', title:c.name, sub:c.teacher||'', action:()=>openClassDetail(c.id) }); });
+    state.exams.forEach(ex => { if(ex.name.toLowerCase().includes(q)) results.push({ type:'Exam', title:ex.name, sub: shortDate(ex.date), action:()=>openExamModal(ex.id) }); });
+    state.notes.forEach(n => { if((n.title+' '+n.body).toLowerCase().includes(q)) results.push({ type:'Note', title:n.title||'Untitled note', sub: (n.body||'').slice(0,60), action:()=>openNoteModal(n.id) }); });
+    if(!results.length){ el.innerHTML = `<p class="empty-state">No results for "${escapeHtml(q)}".</p>`; return; }
+    el.innerHTML = results.slice(0,30).map((r,i) => `<div class="search-result" data-i="${i}"><span class="search-result-type">${r.type}</span><span>${escapeHtml(r.title)}${r.sub?' — <span style="color:var(--muted);">'+escapeHtml(r.sub)+'</span>':''}</span></div>`).join('');
+    qsa('.search-result', el).forEach((row,i) => row.addEventListener('click', () => { closeModal(); setTimeout(()=>results[i].action(), 60); }));
+  }
+
+  /* =========================================================
+     DEMO DATA
+     ========================================================= */
+  function seedDemoData(){
+    const mk = (o) => Object.assign({ demo:true }, o);
+    const math = { id: uid(), name:'Algebra II', teacher:'Mr. Alvarez', room:'204', color: CLASS_COLORS[0], schedule:[{id:uid(),day:1,start:'09:00',end:'09:50'},{id:uid(),day:3,start:'09:00',end:'09:50'}], notes:'', created:Date.now(), demo:true };
+    const bio = { id: uid(), name:'Biology', teacher:'Dr. Nkomo', room:'118', color: CLASS_COLORS[1], schedule:[{id:uid(),day:2,start:'11:00',end:'11:50'},{id:uid(),day:4,start:'11:00',end:'11:50'}], notes:'', created:Date.now(), demo:true };
+    const eng = { id: uid(), name:'English 10', teacher:'Ms. Patel', room:'A2', color: CLASS_COLORS[2], schedule:[{id:uid(),day:1,start:'13:00',end:'13:50'},{id:uid(),day:5,start:'13:00',end:'13:50'}], notes:'', created:Date.now(), demo:true };
+    state.classes.push(math, bio, eng);
+
+    state.assignments.push(
+      newAssignment(mk({ title:'Chapter 4 problem set', classId:math.id, subject:math.name, due: todayISO(), priority:'high', type:'homework', estimate:45, status:'not-started', subtasks:[{id:uid(),text:'Problems 1-10',done:false},{id:uid(),text:'Problems 11-20',done:false}] })),
+      newAssignment(mk({ title:'Biology lab report — osmosis', classId:bio.id, subject:bio.name, due: fmtISO(addDays(todayDate(),1)), priority:'high', type:'lab', estimate:60, status:'in-progress', progress:40 })),
+      newAssignment(mk({ title:'Essay draft: To Kill a Mockingbird', classId:eng.id, subject:eng.name, due: fmtISO(addDays(todayDate(),2)), priority:'medium', type:'essay', estimate:90, status:'not-started' })),
+      newAssignment(mk({ title:'Read Chapter 7', classId:eng.id, subject:eng.name, due: fmtISO(addDays(todayDate(),-1)), priority:'low', type:'reading', estimate:20, status:'not-started' })),
+      newAssignment(mk({ title:'Quiz corrections', classId:math.id, subject:math.name, due: fmtISO(addDays(todayDate(),5)), priority:'low', type:'homework', estimate:15, status:'completed', progress:100 }))
+    );
+
+    state.exams.push({ id: uid(), name:'Biology Unit Test', classId: bio.id, date: fmtISO(addDays(todayDate(),6)), time:'10:00', location:'Room 118', topics:'Cell structure, osmosis, mitosis', notes:'', created:Date.now(), demo:true });
+
+    state.studySessions.push({ id: uid(), subject: math.name, classId: math.id, assignmentId:null, date: todayISO(), startTime:'16:00', durationMin:30, completed:false, actualMin:0, created:Date.now(), demo:true });
+
+    state.notes.push({ id: uid(), title:'Osmosis — key terms', body:'Hypertonic, hypotonic, isotonic solutions and how they affect cell volume. Review diagram from Monday\'s lecture before the test.', subject: bio.name, tags:['biology','exam-prep'], created:Date.now(), modified:Date.now(), demo:true });
+
+    state.ui.demo = true;
+    state.ui.onboarded = true;
+    logActivity('demo', 'Loaded demo data');
+  }
+  function removeDemoData(){
+    state.assignments = state.assignments.filter(a=>!a.demo);
+    state.classes = state.classes.filter(c=>!c.demo);
+    state.exams = state.exams.filter(e=>!e.demo);
+    state.notes = state.notes.filter(n=>!n.demo);
+    state.studySessions = state.studySessions.filter(s=>!s.demo);
+    state.ui.demo = false;
+  }
+
+  /* =========================================================
+     THEME
+     ========================================================= */
+  function applyTheme(){
+    const t = state && state.settings ? state.settings.theme : 'system';
+    let effective = t;
+    if(t === 'system'){ effective = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
+    document.documentElement.setAttribute('data-theme', effective);
+  }
+  if(window.matchMedia){
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if(state && state.settings.theme==='system') applyTheme(); });
+  }
+
+  /* =========================================================
+     INIT
+     ========================================================= */
+  applyTheme();
+  bootstrapSession();
+})();
+</script>
+
+</body>
+</html>
