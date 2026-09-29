@@ -94,27 +94,19 @@
   #view-login{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
   .login-box{ width:100%; max-width:380px; text-align:center; animation: fadeSlideUp .4s ease; }
   .wordmark{ font-size:44px; font-weight:600; letter-spacing:-0.01em; margin:0 0 6px 0; }
-  .tagline{ font-style:italic; color:var(--muted); margin:0 0 30px 0; font-size:15px; }
+  .tagline{ font-style:italic; color:var(--muted); margin:0 0 36px 0; font-size:15px; }
   .field-label{ display:block; text-align:left; font-size:13px; color:var(--muted); margin-bottom:6px; }
-  #view-login input[type="text"], #view-login input[type="email"], #view-login input[type="password"]{ width:100%; padding:10px 4px; border:none; border-bottom:1.5px solid var(--ink); background:transparent; outline:none; margin-bottom:18px; text-align:left; }
-  #view-login input:focus{ border-bottom-color: var(--accent); }
+  #nameInput{ width:100%; padding:10px 4px; border:none; border-bottom:1.5px solid var(--ink); background:transparent; outline:none; margin-bottom:22px; text-align:left; }
+  #nameInput:focus{ border-bottom-color: var(--accent); }
   .btn-primary{ display:inline-flex; align-items:center; justify-content:center; gap:6px; width:100%; background:var(--ink); color:var(--bg); border:none; padding:12px 20px; border-radius:var(--radius-sm); cursor:pointer; letter-spacing:.01em; transition: background .15s ease, transform .1s ease; }
   .btn-primary:hover{ background:var(--accent); }
   .btn-primary:active{ transform: scale(.98); }
-  .btn-primary:disabled{ opacity:.6; cursor:default; }
   :root[data-theme="dark"] .btn-primary{ background:var(--accent); color:var(--accent-ink); }
   :root[data-theme="dark"] .btn-primary:hover{ background:#5CAB93; }
   .login-note{ margin-top:16px; font-size:12.5px; color:var(--muted); min-height:16px; }
-  .login-note.error{ color:var(--overdue); }
   .login-demo{ margin-top:10px; }
   .btn-link{ background:none; border:none; color:var(--muted); text-decoration:underline; cursor:pointer; font-size:13px; padding:4px; }
   .btn-link:hover{ color:var(--accent); }
-  .auth-tabs{ display:flex; gap:4px; background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius); padding:3px; margin-bottom:26px; }
-  .auth-tab{ flex:1; border:none; background:none; padding:8px 0; border-radius:6px; cursor:pointer; color:var(--muted); font-size:13.5px; font-family:inherit; transition:background .15s ease, color .15s ease; }
-  .auth-tab.active{ background:var(--ink); color:var(--bg); }
-  :root[data-theme="dark"] .auth-tab.active{ background:var(--accent); color:var(--accent-ink); }
-  .auth-panel{ display:none; }
-  .auth-panel.active{ display:block; animation: fadeSlideUp .3s ease; }
 
   /* ---------- APP SHELL ---------- */
   #app-shell{ display:flex; min-height:100vh; }
@@ -356,6 +348,23 @@
 
   .schedule-editor-row{ display:grid; grid-template-columns: 90px 1fr 1fr auto; gap:8px; align-items:center; margin-bottom:8px; }
 
+  /* schedule: A/B block rotation + special days */
+  .rot-row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .rot-row input[type=date]{ background:var(--bg); border:1px solid var(--card-border); border-radius:var(--radius-sm); padding:8px 9px; outline:none; }
+  .rot-row input[type=date]:focus{ border-color:var(--accent); }
+  .blk-row{ display:grid; grid-template-columns:104px 104px minmax(0,1fr) 30px; gap:8px; align-items:start; margin-bottom:8px; }
+  .blk-row input, .blk-row select{ width:100%; min-width:0; background:var(--bg); border:1px solid var(--card-border); border-radius:var(--radius-sm); padding:7px 8px; outline:none; }
+  .blk-row input:focus, .blk-row select:focus{ border-color:var(--accent); }
+  .blk-what{ display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .day-strip{ display:flex; flex-wrap:wrap; gap:10px; }
+  .sp-item{ display:flex; justify-content:space-between; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid var(--line); font-size:13.5px; }
+  .sp-item:last-child{ border-bottom:none; }
+  .sp-name{ font-weight:500; }
+  .sp-actions{ display:flex; gap:4px; flex:none; }
+  .chk{ display:flex; gap:5px; align-items:center; font-size:12.5px; cursor:pointer; }
+  .chk input{ margin:0; }
+  .day-tag{ display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:11px; padding:1px 7px; border-radius:10px; background:var(--accent-soft); color:var(--accent); margin-left:6px; }
+
   /* exams */
   .exam-card{ background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius); padding:16px 18px; margin-bottom:14px; box-shadow:var(--shadow); cursor:pointer; }
   .exam-top{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
@@ -449,37 +458,12 @@
     <div class="login-box">
       <h1 class="wordmark">Docket</h1>
       <p class="tagline">everything that's due, in one ruled page</p>
-
-      <div class="auth-tabs">
-        <button type="button" class="auth-tab active" id="tabLogin">Log in</button>
-        <button type="button" class="auth-tab" id="tabSignup">Sign up</button>
-      </div>
-
-      <!-- LOG IN -->
-      <form class="auth-panel active" id="panelLogin" autocomplete="on">
-        <label class="field-label" for="loginEmail">Email</label>
-        <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="username" required>
-        <label class="field-label" for="loginPassword">Password</label>
-        <input type="password" id="loginPassword" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="current-password" required>
-        <button type="submit" class="btn-primary" id="loginBtn">Log in</button>
-      </form>
-
-      <!-- SIGN UP -->
-      <form class="auth-panel" id="panelSignup" autocomplete="on">
-        <label class="field-label" for="signupName">Your name</label>
-        <input type="text" id="signupName" placeholder="e.g. Colin" autocomplete="name" required>
-        <label class="field-label" for="signupEmail">Email</label>
-        <input type="email" id="signupEmail" placeholder="you@example.com" autocomplete="username" required>
-        <label class="field-label" for="signupPassword">Password</label>
-        <input type="password" id="signupPassword" placeholder="at least 8 characters" autocomplete="new-password" minlength="8" required>
-        <label class="field-label" for="signupPassword2">Confirm password</label>
-        <input type="password" id="signupPassword2" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="new-password" minlength="8" required>
-        <button type="submit" class="btn-primary" id="signupBtn">Create account</button>
-      </form>
-
+      <label class="field-label" for="nameInput">Your name</label>
+      <input type="text" id="nameInput" placeholder="e.g. Colin" autocomplete="off">
+      <button class="btn-primary" id="openBtn">Open my docket</button>
       <p class="login-note" id="loginNote">&nbsp;</p>
       <div class="login-demo">
-        <button class="btn-link" id="demoBtn">or try it with demo data (no account needed)</button>
+        <button class="btn-link" id="demoBtn">or try it with demo data</button>
       </div>
     </div>
   </div>
@@ -517,7 +501,7 @@
         </button>
         <div class="topbar-right">
           <span class="who-name" id="whoName"></span>
-          <button class="btn-ghost" id="switchBtn">Log out</button>
+          <button class="btn-ghost" id="switchBtn">Switch</button>
         </div>
       </header>
 
@@ -550,11 +534,6 @@
   <div class="toast-container" id="toastContainer" aria-live="polite"></div>
   <input type="file" id="importFileInput" accept="application/json" class="hidden">
 
-<!-- Supabase client (auth + database). Docket's backend is Supabase, not Cloudflare —
-     see supabase-config.js for the two values you need to fill in after creating
-     your Supabase project. -->
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js"></script>
 <script>
 (function(){
   'use strict';
@@ -567,16 +546,11 @@
   const ASSIGN_TYPES = ['homework','quiz','test','project','essay','lab','reading','other'];
   const CLASS_COLORS = ['#2F6F62','#B08A3E','#7A5C7E','#52697A','#A15C43','#3D6EA8','#8A6D3B','#5C7A5A'];
 
-  let currentUser = null;      // display name (string) — used throughout the UI/templates
-  let currentAccount = null;   // { id, name, email } for the signed-in account, or null in demo mode
-  let isDemoMode = false;
+  let currentUser = null;
   let state = null;
-  let ui = { view:'dashboard', assignFilter:{status:'all', subject:'', priority:'', type:'', tag:'', sort:'due'}, calDate: new Date(), calView:'month', plannerWeekOffset:0, editingAssignmentId:null, editingClassId:null, editingExamId:null, editingNoteId:null, timer:null, sidebarOpen:false };
+  let ui = { view:'dashboard', assignFilter:{status:'all', subject:'', priority:'', type:'', tag:'', sort:'due'}, calDate: new Date(), calView:'month', plannerWeekOffset:0, editingAssignmentId:null, editingClassId:null, editingExamId:null, editingNoteId:null, timer:null, sidebarOpen:false, classesTab:'list' };
 
-  /* ---------- storage ----------
-     Signed-in accounts persist to the backend (D1 via Cloudflare Pages Functions),
-     with a localStorage mirror per-user for instant loads/offline resilience.
-     Demo mode never talks to the backend — it's local-only, like before. */
+  /* ---------- storage ---------- */
   const Store = {
     get(key){ try{ const raw = localStorage.getItem(key); return raw === null ? null : { value: raw }; }catch(e){ return null; } },
     set(key, value){ try{ localStorage.setItem(key, value); return true; }catch(e){ return false; } },
@@ -587,101 +561,6 @@
   function legacyTaskKey(user){ return STORAGE_PREFIX + ':tasks:' + user.toLowerCase(); }
   function legacyCanvasKey(user){ return STORAGE_PREFIX + ':canvas:' + user.toLowerCase(); }
   function lastUserKey(){ return STORAGE_PREFIX + ':lastUser'; }
-  function cacheKey(accountId){ return STORAGE_PREFIX + ':cache:v2:' + accountId; }
-
-  /* ---------- backend API ----------
-     Backed by Supabase (Postgres + Supabase Auth) rather than Cloudflare
-     Pages Functions/D1. This object keeps the exact same external shape
-     (ok/user/error, getState/saveState) the rest of the app already expects,
-     so nothing outside this block needed to change. */
-  const supabaseClient = (window.supabase && window.DOCKET_SUPABASE_URL && window.DOCKET_SUPABASE_URL.indexOf('REPLACE_WITH') !== 0)
-    ? window.supabase.createClient(window.DOCKET_SUPABASE_URL, window.DOCKET_SUPABASE_ANON_KEY)
-    : null;
-
-  function toAccount(user){
-    if(!user) return null;
-    return { id: user.id, name: (user.user_metadata && user.user_metadata.name) || user.email, email: user.email };
-  }
-  function friendlyAuthError(msg){
-    if(!msg) return 'Something went wrong.';
-    if(/already registered|already exists/i.test(msg)) return 'An account with that email already exists.';
-    if(/invalid login credentials/i.test(msg)) return 'Incorrect email or password.';
-    if(/email not confirmed/i.test(msg)) return 'Check your inbox to confirm your email before logging in.';
-    if(/password should be at least/i.test(msg)) return 'Password must be at least 8 characters.';
-    return msg;
-  }
-
-  const Api = {
-    _needsConfig(){
-      return !supabaseClient;
-    },
-    async signup(name, email, password){
-      if(this._needsConfig()) return { ok:false, error:'Docket isn\u2019t connected to Supabase yet — see supabase-config.js.' };
-      const { data, error } = await supabaseClient.auth.signUp({
-        email, password, options: { data: { name } }
-      });
-      if(error) return { ok:false, error: friendlyAuthError(error.message) };
-      if(!data.session){
-        // Email confirmation is turned on for this project — there's no
-        // session yet, so tell the person to confirm before we can log them in.
-        return { ok:false, error:'Account created — check your email to confirm it, then log in.' };
-      }
-      return { ok:true, user: toAccount(data.user) };
-    },
-    async login(email, password){
-      if(this._needsConfig()) return { ok:false, error:'Docket isn\u2019t connected to Supabase yet — see supabase-config.js.' };
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-      if(error) return { ok:false, error: friendlyAuthError(error.message) };
-      return { ok:true, user: toAccount(data.user) };
-    },
-    async logout(){
-      if(this._needsConfig()) return;
-      try{ await supabaseClient.auth.signOut(); }catch(e){}
-    },
-    async me(){
-      if(this._needsConfig()) return null;
-      try{
-        const { data } = await supabaseClient.auth.getSession();
-        const user = data && data.session && data.session.user;
-        return toAccount(user);
-      }catch(e){ return null; }
-    },
-    async getState(){
-      if(this._needsConfig()) throw new Error('not_configured');
-      const { data: sessionData } = await supabaseClient.auth.getSession();
-      const user = sessionData && sessionData.session && sessionData.session.user;
-      if(!user) throw new Error('state_fetch_failed');
-      const { data, error } = await supabaseClient
-        .from('docket_state').select('data').eq('user_id', user.id).maybeSingle();
-      if(error) throw new Error('state_fetch_failed');
-      return (data && data.data) || null;
-    },
-    async saveState(stateObj){
-      if(this._needsConfig()) return false;
-      try{
-        const { data: sessionData } = await supabaseClient.auth.getSession();
-        const user = sessionData && sessionData.session && sessionData.session.user;
-        if(!user) return false;
-        await supabaseClient.from('docket_state').upsert({
-          user_id: user.id, data: stateObj, updated_at: new Date().toISOString()
-        });
-        return true;
-      }catch(e){ return false; }
-    },
-    async changePassword(currentPassword, newPassword){
-      if(this._needsConfig()) return { ok:false, error:'Docket isn\u2019t connected to Supabase yet — see supabase-config.js.' };
-      const { data: sessionData } = await supabaseClient.auth.getSession();
-      const email = sessionData && sessionData.session && sessionData.session.user && sessionData.session.user.email;
-      if(!email) return { ok:false, error:'You need to be logged in.' };
-      // Supabase's updateUser() doesn't ask for the current password itself,
-      // so re-authenticate with it first to confirm it's really the account owner.
-      const check = await supabaseClient.auth.signInWithPassword({ email, password: currentPassword });
-      if(check.error) return { ok:false, error:'Current password is incorrect.' };
-      const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
-      if(error) return { ok:false, error: friendlyAuthError(error.message) };
-      return { ok:true };
-    }
-  };
 
   /* ---------- utils ---------- */
   function uid(){ return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8); }
@@ -762,6 +641,8 @@
       studySessions: [],
       activity: [],
       planMyDay: null,
+      specialSchedules: [],
+      specialDates: [],
       settings: {
         theme: 'system',
         accent: 'green',
@@ -769,7 +650,9 @@
         weekStart: 1,
         defaultCalendarView: 'month',
         notifications: false,
-        canvas: { domain:'', token:'', lastSynced:null, connected:false }
+        canvas: { domain:'', token:'', lastSynced:null, connected:false },
+        scheduleMode: 'weekday', // 'weekday' | 'ab'
+        abAnchor: { date: todayISO(), letter: 'A' }
       },
       ui: { onboarded: false, demo:false }
     };
@@ -834,6 +717,10 @@
       s.settings = s.settings || defaultState(s.user).settings;
       s.ui = s.ui || { onboarded:true, demo:false };
     }
+    s.specialSchedules = Array.isArray(s.specialSchedules) ? s.specialSchedules : [];
+    s.specialDates = Array.isArray(s.specialDates) ? s.specialDates : [];
+    if(!s.settings.scheduleMode) s.settings.scheduleMode = 'weekday';
+    if(!s.settings.abAnchor || !s.settings.abAnchor.date) s.settings.abAnchor = { date: todayISO(), letter: 'A' };
     // defensive fills for anything missing/corrupt
     s.assignments = Array.isArray(s.assignments) ? s.assignments.filter(a => a && typeof a === 'object') : [];
     s.assignments.forEach(a => {
@@ -854,7 +741,7 @@
     return s;
   }
 
-  function loadLocalState(user){
+  function loadState(user){
     const r = Store.get(dataKey(user));
     if(r){
       try{
@@ -867,40 +754,9 @@
     return migrateLegacy(user);
   }
 
-  // Loads state for a signed-in account: tries the backend first (source of
-  // truth), falls back to the local cache if offline, migrates either way.
-  async function loadAccountState(account){
-    const cache = Store.get(cacheKey(account.id));
-    try{
-      const remote = await Api.getState();
-      if(remote){
-        const migrated = migrateState(remote);
-        Store.set(cacheKey(account.id), JSON.stringify(migrated));
-        return migrated;
-      }
-    }catch(e){
-      if(cache){
-        try{ return migrateState(JSON.parse(cache.value)); }catch(e2){}
-      }
-      toast("Couldn't reach the server — showing your last saved data.", 'error');
-    }
-    // Brand-new account with nothing saved yet
-    return defaultState(account.name);
-  }
-
-  let saveDebounceTimer = null;
   function saveState(){
     if(!currentUser) return;
-    if(isDemoMode){
-      Store.set(dataKey(currentUser), JSON.stringify(state));
-      return;
-    }
-    if(!currentAccount) return;
-    // Write-through local cache immediately for snappy reloads...
-    Store.set(cacheKey(currentAccount.id), JSON.stringify(state));
-    // ...and debounce the network save so rapid edits don't spam the API.
-    clearTimeout(saveDebounceTimer);
-    saveDebounceTimer = setTimeout(() => { Api.saveState(state); }, 500);
+    Store.set(dataKey(currentUser), JSON.stringify(state));
   }
 
   function logActivity(type, text){
@@ -1019,7 +875,7 @@
   function closeModal(){
     byId('modalOverlay').classList.add('hidden');
     document.body.style.overflow = '';
-    if(ui.timer && ui.timer._modalBound){ /* keep timer running in background */ }
+    if(ui.timer) stopTimer(true);
   }
   byId('modalOverlay').addEventListener('click', (e) => { if(e.target === byId('modalOverlay')) closeModal(); });
   byId('modalCloseBtn').addEventListener('click', closeModal);
@@ -1037,98 +893,40 @@
      ========================================================= */
   const loginView = byId('view-login');
   const appShell = byId('app-shell');
+  const nameInput = byId('nameInput');
   const loginNote = byId('loginNote');
 
-  function setLoginNote(msg, isError){
-    loginNote.textContent = msg || '\u00a0';
-    loginNote.classList.toggle('error', !!isError);
+  function initLogin(){
+    const r = Store.get(lastUserKey());
+    if(r && r.value) nameInput.value = r.value;
   }
-
-  /* ---- tab switching ---- */
-  const tabLogin = byId('tabLogin'), tabSignup = byId('tabSignup');
-  const panelLogin = byId('panelLogin'), panelSignup = byId('panelSignup');
-  function showAuthTab(which){
-    const loginActive = which === 'login';
-    tabLogin.classList.toggle('active', loginActive);
-    tabSignup.classList.toggle('active', !loginActive);
-    panelLogin.classList.toggle('active', loginActive);
-    panelSignup.classList.toggle('active', !loginActive);
-    setLoginNote('');
-  }
-  tabLogin.addEventListener('click', () => showAuthTab('login'));
-  tabSignup.addEventListener('click', () => showAuthTab('signup'));
-
-  /* ---- log in ---- */
-  byId('panelLogin').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = byId('loginEmail').value.trim();
-    const password = byId('loginPassword').value;
-    if(!email || !password){ setLoginNote('Enter your email and password.', true); return; }
-    setBusy(true, 'loginBtn'); setLoginNote('Logging in\u2026');
-    const res = await Api.login(email, password);
-    setBusy(false, 'loginBtn');
-    if(!res.ok){ setLoginNote(res.error, true); return; }
-    await enterAccount(res.user);
+  byId('openBtn').addEventListener('click', () => openDocket(nameInput.value.trim()));
+  nameInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') openDocket(nameInput.value.trim()); });
+  byId('demoBtn').addEventListener('click', () => {
+    const n = nameInput.value.trim() || 'Demo Student';
+    nameInput.value = n;
+    openDocket(n, true);
   });
 
-  /* ---- sign up ---- */
-  byId('panelSignup').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = byId('signupName').value.trim();
-    const email = byId('signupEmail').value.trim();
-    const pw1 = byId('signupPassword').value;
-    const pw2 = byId('signupPassword2').value;
-    if(!name || !email || !pw1){ setLoginNote('Fill in every field to continue.', true); return; }
-    if(pw1.length < 8){ setLoginNote('Password must be at least 8 characters.', true); return; }
-    if(pw1 !== pw2){ setLoginNote("Passwords don't match.", true); return; }
-    setBusy(true, 'signupBtn'); setLoginNote('Creating your account\u2026');
-    const res = await Api.signup(name, email, pw1);
-    setBusy(false, 'signupBtn');
-    if(!res.ok){ setLoginNote(res.error, true); return; }
-    await enterAccount(res.user, true);
-  });
-
-  function setBusy(busy, btnId){
-    const btn = byId(btnId);
-    if(btn) btn.disabled = busy;
-  }
-
-  /* ---- demo mode (local-only, no account) ---- */
-  byId('demoBtn').addEventListener('click', () => openDemo());
-
-  async function openDemo(){
-    currentUser = 'Demo Student';
-    currentAccount = null;
-    isDemoMode = true;
-    setLoginNote('Opening\u2026');
-    state = loadLocalState(currentUser);
+  function openDocket(name, loadDemo){
+    if(!name){ loginNote.textContent = 'Enter a name to continue.'; return; }
+    currentUser = name;
+    loginNote.textContent = 'Opening\u2026';
+    Store.set(lastUserKey(), name);
+    state = loadState(name);
     applyTheme();
-    if(!state.assignments.length && !state.ui.demo){ seedDemoData(); }
+    if(loadDemo && !state.assignments.length && !state.ui.demo){
+      seedDemoData();
+    }
     saveState();
     showApp();
     if(!state.ui.onboarded){ setTimeout(openWizard, 350); }
   }
 
-  /* ---- shared entry point once we have an authenticated account ---- */
-  async function enterAccount(account){
-    currentAccount = account;
-    currentUser = account.name;
-    isDemoMode = false;
-    setLoginNote('Opening\u2026');
-    state = await loadAccountState(account);
-    applyTheme();
-    saveState();
-    showApp();
-    if(!state.ui.onboarded){ setTimeout(openWizard, 350); }
-  }
-
-  byId('switchBtn').addEventListener('click', async () => {
-    if(!isDemoMode) await Api.logout();
-    currentUser = null; currentAccount = null; isDemoMode = false; state = null;
+  byId('switchBtn').addEventListener('click', () => {
     appShell.classList.add('hidden');
     loginView.classList.remove('hidden');
-    byId('loginEmail').value = ''; byId('loginPassword').value = '';
-    setLoginNote('');
+    loginNote.textContent = '';
     stopTimer(true);
   });
 
@@ -1137,14 +935,6 @@
     appShell.classList.remove('hidden');
     byId('whoName').textContent = currentUser;
     setView('dashboard');
-  }
-
-  /* ---- on page load: is there already a valid session? ---- */
-  async function bootstrapSession(){
-    const account = await Api.me();
-    if(account){
-      await enterAccount(account);
-    }
   }
 
   /* ---------- first-run wizard ---------- */
@@ -1578,7 +1368,7 @@
 
     el.innerHTML = `
       <p class="greeting serif">${greetingWord()}, ${escapeHtml(currentUser)}.</p>
-      <p class="greeting-date">${todayDate().toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'})}${nextClass ? ' &middot; Next class: ' + escapeHtml(nextClass.name) + ' at ' + fmtTime12(nextClass.start) : ''}</p>
+      <p class="greeting-date">${todayDate().toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'})}${dayTypeLabel(todayISO()) ? ' &middot; ' + escapeHtml(dayTypeLabel(todayISO())) : ''}${nextClass ? ' &middot; Next class: ' + escapeHtml(nextClass.name) + ' at ' + fmtTime12(nextClass.start) : ''}</p>
 
       <div class="grid-stats">
         <div class="stat-card"><div class="stat-num">${totalActive}</div><div class="stat-label">Active assignments</div></div>
@@ -1670,12 +1460,68 @@
         </div>`).join('');
   }
 
-  function todaysSchedule(){
-    const dow = new Date().getDay(); // 0=Sun..6=Sat
+  /* ---------- block (A/B) rotation + special day schedules ---------- */
+  function weekdaySeq(iso){
+    // sequential index among Mon-Fri weekdays only, anchored to a fixed Monday; returns null for Sat/Sun
+    const d = parseISO(iso);
+    if(!d) return null;
+    const epoch = new Date(2000,0,3); // a Monday
+    const days = Math.round((d - epoch) / 86400000);
+    const dow = ((days % 7) + 7) % 7; // 0=Mon..6=Sun relative to epoch Monday
+    if(dow >= 5) return null;
+    return Math.floor(days / 7) * 5 + dow;
+  }
+  function abLetterForDate(iso){
+    const anchor = (state.settings && state.settings.abAnchor) || { date: todayISO(), letter:'A' };
+    const wi = weekdaySeq(iso), wa = weekdaySeq(anchor.date);
+    if(wi === null) return null; // weekend, no rotation day
+    if(wa === null) return 'A';
+    const letters = ['A','B'];
+    let idx = letters.indexOf(anchor.letter); if(idx < 0) idx = 0;
+    idx = (((idx + (wi - wa)) % 2) + 2) % 2;
+    return letters[idx];
+  }
+  function specialDateEntry(iso){ return (state.specialDates||[]).find(x => x.date === iso) || null; }
+  function getSpecialSchedule(id){ return (state.specialSchedules||[]).find(t => t.id === id) || null; }
+  function scheduleDayOptions(){
+    if(state.settings.scheduleMode === 'ab') return ['A','B'].map(d => `<option value="${d}">${d} day</option>`).join('');
+    return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((d,i) => `<option value="${i}">${d}</option>`).join('');
+  }
+  function dayLabelFor(day){
+    if(typeof day === 'string') return day + ' day';
+    const names = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    return names[day] || '';
+  }
+  function compareDay(a,b){ return String(a).localeCompare(String(b)); }
+  function scheduleForDate(iso){
+    const sp = specialDateEntry(iso);
+    if(sp){
+      const tmpl = getSpecialSchedule(sp.templateId);
+      if(!tmpl) return [];
+      return tmpl.blocks.slice().sort((a,b)=>a.start.localeCompare(b.start)).map(b => {
+        const cls = b.classId ? getClass(b.classId) : null;
+        return { name: cls ? cls.name : (b.label || 'Block'), start:b.start, end:b.end, color: cls ? cls.color : 'var(--muted)', special:true, specialName: tmpl.name };
+      });
+    }
     const rows = [];
-    state.classes.forEach(c => (c.schedule||[]).forEach(s => { if(s.day === dow) rows.push({ name:c.name, start:s.start, end:s.end, color:c.color }); }));
+    if(state.settings.scheduleMode === 'ab'){
+      const letter = abLetterForDate(iso);
+      if(!letter) return rows;
+      state.classes.forEach(c => (c.schedule||[]).forEach(s => { if(s.day === letter) rows.push({ name:c.name, start:s.start, end:s.end, color:c.color }); }));
+    } else {
+      const d = parseISO(iso); if(!d) return rows;
+      const dow = d.getDay();
+      state.classes.forEach(c => (c.schedule||[]).forEach(s => { if(s.day === dow) rows.push({ name:c.name, start:s.start, end:s.end, color:c.color }); }));
+    }
     rows.sort((a,b)=> a.start.localeCompare(b.start));
     return rows;
+  }
+  function todaysSchedule(){ return scheduleForDate(todayISO()); }
+  function dayTypeLabel(iso){
+    const sp = specialDateEntry(iso);
+    if(sp){ const tmpl = getSpecialSchedule(sp.templateId); return tmpl ? tmpl.name : null; }
+    if(state.settings.scheduleMode === 'ab'){ const l = abLetterForDate(iso); return l ? l + ' day' : null; }
+    return null;
   }
   function nextClassToday(){
     const now = nowHM();
@@ -1778,7 +1624,7 @@
 
     el.innerHTML = `
       <div class="view-header">
-        <div><h1 class="view-title">Today</h1><p class="view-sub">${todayDate().toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'})}</p></div>
+        <div><h1 class="view-title">Today</h1><p class="view-sub">${todayDate().toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'})}${dayTypeLabel(todayISO()) ? ' &middot; ' + escapeHtml(dayTypeLabel(todayISO())) : ''}</p></div>
         <div class="view-actions"><button class="btn-secondary btn-sm" id="todayPlanBtn">Plan my day</button></div>
       </div>
 
@@ -2113,10 +1959,10 @@
     const iso = fmtISO(ui.calDate);
     byId('calTitle').textContent = ui.calDate.toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'});
     const evs = eventsForDate(iso);
-    const sched = state.classes.flatMap(c => (c.schedule||[]).filter(s=>s.day===ui.calDate.getDay()).map(s=>({name:c.name,start:s.start,color:c.color})));
-    sched.sort((a,b)=>a.start.localeCompare(b.start));
+    const sched = scheduleForDate(iso);
+    const dayLabel = specialDateEntry(iso) ? (sched[0] && sched[0].specialName) : (state.settings.scheduleMode==='ab' ? (abLetterForDate(iso) ? abLetterForDate(iso)+' day' : null) : null);
     body.innerHTML = `
-      <div class="card"><p class="card-title">Classes</p>${sched.length?sched.map(s=>`<div class="schedule-row"><span class="schedule-time">${fmtTime12(s.start)}</span><span class="class-dot" style="background:${s.color}"></span>${escapeHtml(s.name)}</div>`).join(''):'<p class="empty-state">No classes.</p>'}</div>
+      <div class="card"><p class="card-title">Classes${dayLabel?`<small>${escapeHtml(dayLabel)}</small>`:''}</p>${sched.length?sched.map(s=>`<div class="schedule-row"><span class="schedule-time">${fmtTime12(s.start)}</span><span class="class-dot" style="background:${s.color}"></span>${escapeHtml(s.name)}</div>`).join(''):'<p class="empty-state">No classes.</p>'}</div>
       <div class="card"><p class="card-title">Due / exams <button class="btn-ghost" data-newat="${iso}">+ add</button></p>
       <div class="cal-day-list">${evs.length ? evs.map(e=>`<div class="task-row" data-ev="${e.kind}:${e.id}"><span class="priority-dot ${e.kind==='exam'?'high':'medium'}"></span> ${escapeHtml(e.title)}</div>`).join('') : `<p class="empty-state">Nothing due this day.</p>`}</div></div>
     `;
@@ -2215,12 +2061,57 @@
     el.innerHTML = `
       <div class="view-header">
         <div><h1 class="view-title">My Classes</h1><p class="view-sub">${state.classes.length} class${state.classes.length===1?'':'es'}</p></div>
-        <div class="view-actions"><button class="btn-primary" style="width:auto;" id="classNewBtn">+ New class</button></div>
+        <div class="view-actions">${ui.classesTab!=='special' ? '<button class="btn-primary" style="width:auto;" id="classNewBtn">+ New class</button>' : ''}</div>
       </div>
-      <div id="classList"></div>
+      <div class="tabs" id="classTabs">
+        <button class="tab ${ui.classesTab!=='special'?'active':''}" data-tab="list">Classes &amp; schedule</button>
+        <button class="tab ${ui.classesTab==='special'?'active':''}" data-tab="special">Special days</button>
+      </div>
+      <div id="classTabBody"></div>
     `;
-    byId('classNewBtn').addEventListener('click', () => openClassModal(null));
-    renderClassList();
+    qsa('.tab', byId('classTabs')).forEach(t => t.addEventListener('click', () => { ui.classesTab = t.dataset.tab; renderCurrentView(); }));
+    if(ui.classesTab === 'special'){
+      renderSpecialDaysTab(byId('classTabBody'));
+    } else {
+      byId('classTabBody').innerHTML = `
+        <div class="card">
+          <p class="card-title">Schedule type</p>
+          <div class="segmented" id="schedModeToggle" style="width:280px;">
+            <button type="button" data-v="weekday" class="${state.settings.scheduleMode!=='ab'?'active':''}">Same every week</button>
+            <button type="button" data-v="ab" class="${state.settings.scheduleMode==='ab'?'active':''}">A/B block schedule</button>
+          </div>
+          ${state.settings.scheduleMode==='ab' ? `
+            <div class="rot-row" style="margin-top:14px;">
+              <span class="settings-row-label">On</span>
+              <input type="date" id="abAnchorDate" value="${state.settings.abAnchor.date}">
+              <span class="settings-row-label">the schedule is a(n)</span>
+              <div class="segmented" id="abAnchorLetter" style="width:130px;">
+                <button type="button" data-v="A" class="${state.settings.abAnchor.letter==='A'?'active':''}">A day</button>
+                <button type="button" data-v="B" class="${state.settings.abAnchor.letter==='B'?'active':''}">B day</button>
+              </div>
+            </div>
+            <p class="settings-row-hint">Weekends don't count — the rotation only alternates on school days. Add each class's A-day and B-day blocks from its class page below.</p>
+          ` : `<p class="settings-row-hint" style="margin-top:10px;">Switch to A/B if your school alternates classes on a two-day block rotation instead of the same schedule every weekday.</p>`}
+        </div>
+        <div id="classList"></div>
+      `;
+      byId('classNewBtn').addEventListener('click', () => openClassModal(null));
+      qsa('#schedModeToggle button').forEach(b => b.addEventListener('click', () => {
+        state.settings.scheduleMode = b.dataset.v;
+        saveState(); renderCurrentView();
+      }));
+      if(state.settings.scheduleMode==='ab'){
+        byId('abAnchorDate').addEventListener('change', () => {
+          state.settings.abAnchor.date = byId('abAnchorDate').value || todayISO();
+          saveState(); renderCurrentView();
+        });
+        qsa('#abAnchorLetter button').forEach(b => b.addEventListener('click', () => {
+          state.settings.abAnchor.letter = b.dataset.v;
+          saveState(); renderCurrentView();
+        }));
+      }
+      renderClassList();
+    }
   };
 
   function renderClassList(){
@@ -2287,16 +2178,19 @@
     const assigns = activeAssignments().filter(a => a.classId===c.id).sort((a,b)=>(a.due||'9999').localeCompare(b.due||'9999'));
     const active = assigns.filter(a=>!isDone(a));
     const done = assigns.filter(isDone);
-    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const mode = state.settings.scheduleMode;
+    const visibleSched = (c.schedule||[]).filter(s => mode==='ab' ? typeof s.day === 'string' : typeof s.day === 'number');
+    const hiddenCount = (c.schedule||[]).length - visibleSched.length;
     openModal({
       title: c.name, large:true,
       bodyHtml: `
         <p class="view-sub">${escapeHtml(c.teacher||'')}${c.teacher&&c.room?' &middot; ':''}${escapeHtml(c.room||'')}</p>
         ${c.notes ? `<p>${escapeHtml(c.notes)}</p>` : ''}
-        <p class="card-title">Weekly schedule</p>
-        <div id="cdSchedList">${(c.schedule||[]).length ? c.schedule.slice().sort((a,b)=>a.day-b.day||a.start.localeCompare(b.start)).map(s=>`<div class="schedule-row">${dayNames[s.day]} &middot; ${fmtTime12(s.start)}&ndash;${fmtTime12(s.end)} <button class="task-delete" data-sid="${s.id}" aria-label="Remove">&times;</button></div>`).join('') : '<p class="empty-state">No weekly blocks yet.</p>'}</div>
+        <p class="card-title">${mode==='ab' ? 'A/B block schedule' : 'Weekly schedule'}</p>
+        <div id="cdSchedList">${visibleSched.length ? visibleSched.slice().sort((a,b)=>compareDay(a.day,b.day)||a.start.localeCompare(b.start)).map(s=>`<div class="schedule-row">${dayLabelFor(s.day)} &middot; ${fmtTime12(s.start)}&ndash;${fmtTime12(s.end)} <button class="task-delete" data-sid="${s.id}" aria-label="Remove">&times;</button></div>`).join('') : `<p class="empty-state">No ${mode==='ab'?'A/B blocks':'weekly blocks'} yet.</p>`}</div>
+        ${hiddenCount ? `<p class="settings-row-hint">${hiddenCount} block${hiddenCount===1?'':'s'} saved under the other schedule type ${mode==='ab'?'(weekday)':'(A/B)'} — switch schedule type in Classes to see ${hiddenCount===1?'it':'them'}.</p>` : ''}
         <div class="schedule-editor-row">
-          <select id="cdDay">${dayNames.map((d,i)=>`<option value="${i}">${d}</option>`).join('')}</select>
+          <select id="cdDay">${scheduleDayOptions()}</select>
           <input type="time" id="cdStart" value="09:00">
           <input type="time" id="cdEnd" value="09:50">
           <button class="btn-secondary btn-sm" id="cdAddSched">Add</button>
@@ -2308,7 +2202,9 @@
       onMount(){
         byId('cdEdit').addEventListener('click', () => openClassModal(c.id));
         byId('cdAddSched').addEventListener('click', () => {
-          c.schedule.push({ id:uid(), day:Number(byId('cdDay').value), start:byId('cdStart').value, end:byId('cdEnd').value });
+          const raw = byId('cdDay').value;
+          const day = mode==='ab' ? raw : Number(raw);
+          c.schedule.push({ id:uid(), day, start:byId('cdStart').value, end:byId('cdEnd').value });
           saveState(); closeModal(); openClassDetail(c.id);
         });
         qsa('[data-sid]').forEach(btn => btn.addEventListener('click', () => {
@@ -2317,6 +2213,176 @@
         }));
       }
     });
+  }
+
+  /* =========================================================
+     SPECIAL DAY SCHEDULES (short days, advisory days, etc.)
+     ========================================================= */
+  function openSpecialScheduleModal(id){
+    const existing = id ? getSpecialSchedule(id) : null;
+    const t = existing ? { id: existing.id, name: existing.name, blocks: existing.blocks.map(b=>Object.assign({},b)) } : { id: uid(), name:'', blocks:[] };
+    const isNew = !existing;
+    function rowsHtml(){
+      return t.blocks.length ? t.blocks.slice().sort((a,b)=>a.start.localeCompare(b.start)).map(b => `
+        <div class="blk-row" data-bid="${b.id}">
+          <input type="time" class="blk-s" value="${b.start}">
+          <input type="time" class="blk-e" value="${b.end}">
+          <div class="blk-what">
+            <select class="blk-cls"><option value="">Custom label&hellip;</option>${state.classes.map(c=>`<option value="${c.id}" ${b.classId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join('')}</select>
+            <input type="text" class="blk-label" placeholder="e.g. Advisory, Assembly" value="${escapeHtml(b.label||'')}">
+          </div>
+          <button type="button" class="task-delete blk-del" aria-label="Remove">&times;</button>
+        </div>`).join('') : '<p class="empty-state">No blocks yet — add one below.</p>';
+    }
+    function readRowsIntoModel(){
+      qsa('#ssBlockList .blk-row').forEach(row => {
+        const b = t.blocks.find(x=>x.id===row.dataset.bid); if(!b) return;
+        b.start = row.querySelector('.blk-s').value;
+        b.end = row.querySelector('.blk-e').value;
+        b.classId = row.querySelector('.blk-cls').value || null;
+        b.label = row.querySelector('.blk-label').value.trim();
+      });
+    }
+    openModal({
+      title: isNew ? 'New special schedule' : 'Edit special schedule', large:true,
+      bodyHtml: `
+        <div class="field"><label>Name</label><input type="text" id="ssName" value="${escapeHtml(t.name)}" placeholder="e.g. Short Day, Advisory Day, Assembly Schedule"></div>
+        <p class="card-title">Blocks</p>
+        <div id="ssBlockList">${rowsHtml()}</div>
+        <div class="blk-row">
+          <input type="time" id="ssNewStart" value="09:00">
+          <input type="time" id="ssNewEnd" value="09:30">
+          <select id="ssNewCls"><option value="">Custom label&hellip;</option>${state.classes.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}</select>
+          <span></span>
+        </div>
+        <div class="field"><input type="text" id="ssNewLabel" placeholder="Label (if not a class), e.g. Advisory"></div>
+        <button class="btn-secondary btn-sm" type="button" id="ssAddBlock">+ Add block</button>
+      `,
+      footerHtml: `<div>${isNew?'':'<button class="btn-danger btn-sm" id="ssDeleteTemplate">Delete</button>'}</div>
+        <div class="modal-footer-right"><button class="btn-ghost" id="ssCancelTemplate">Cancel</button><button class="btn-primary" style="width:auto;" id="ssSaveTemplate">${isNew?'Create':'Save'}</button></div>`,
+      onMount(){
+        byId('ssCancelTemplate').addEventListener('click', closeModal);
+        function bindRemovals(){
+          qsa('.blk-del', byId('ssBlockList')).forEach(btn => btn.addEventListener('click', () => {
+            readRowsIntoModel();
+            const row = btn.closest('[data-bid]');
+            t.blocks = t.blocks.filter(b=>b.id!==row.dataset.bid);
+            byId('ssBlockList').innerHTML = rowsHtml();
+            bindRemovals();
+          }));
+        }
+        bindRemovals();
+        byId('ssAddBlock').addEventListener('click', () => {
+          readRowsIntoModel();
+          const start = byId('ssNewStart').value, end = byId('ssNewEnd').value;
+          const classId = byId('ssNewCls').value || null;
+          const label = byId('ssNewLabel').value.trim();
+          if(!start || !end){ toast('Set a start and end time','error'); return; }
+          if(!classId && !label){ toast('Give the block a label or link it to a class','error'); return; }
+          t.blocks.push({ id:uid(), start, end, classId, label });
+          byId('ssBlockList').innerHTML = rowsHtml();
+          bindRemovals();
+          byId('ssNewLabel').value = '';
+        });
+        if(!isNew) byId('ssDeleteTemplate').addEventListener('click', () => {
+          confirmDialog('Delete "'+t.name+'"? Any dates using it will be unassigned.', { confirmLabel:'Delete', onConfirm(){
+            state.specialSchedules = state.specialSchedules.filter(x=>x.id!==t.id);
+            state.specialDates = state.specialDates.filter(x=>x.templateId!==t.id);
+            saveState(); closeModal(); renderCurrentView(); toast('Special schedule deleted');
+          }});
+        });
+        byId('ssSaveTemplate').addEventListener('click', () => {
+          readRowsIntoModel();
+          const name = byId('ssName').value.trim();
+          if(!name){ toast('Give it a name','error'); return; }
+          if(!t.blocks.length){ toast('Add at least one block','error'); return; }
+          t.name = name;
+          if(isNew){ state.specialSchedules.push(t); }
+          else{ const orig = getSpecialSchedule(t.id); orig.name = t.name; orig.blocks = t.blocks; }
+          saveState(); closeModal(); renderCurrentView(); toast(isNew?'Special schedule created':'Saved','success');
+        });
+      }
+    });
+  }
+
+  function renderSpecialDaysTab(el){
+    const templates = state.specialSchedules || [];
+    const dates = (state.specialDates || []).slice().sort((a,b)=>a.date.localeCompare(b.date));
+    el.innerHTML = `
+      <div class="card">
+        <p class="card-title">Special-day schedules <button class="btn-secondary btn-sm" type="button" id="newSpecialSchedBtn">+ New</button></p>
+        ${templates.length ? templates.map(t => `
+          <div class="sp-item">
+            <div><span class="sp-name">${escapeHtml(t.name)}</span> <span class="settings-row-hint">${t.blocks.length} block${t.blocks.length===1?'':'s'}</span></div>
+            <div class="sp-actions"><button class="btn-ghost" data-edit-t="${t.id}">Edit</button></div>
+          </div>`).join('') : '<p class="empty-state">No special schedules yet. Add one for a short day, advisory day, assembly, or any day that doesn\'t follow the normal schedule.</p>'}
+      </div>
+      <div class="card">
+        <p class="card-title">Assign to dates <small>bulk-add short days, advisory days &amp; more</small></p>
+        ${templates.length ? `
+          <div class="field"><label>Schedule to apply</label><select id="bulkTemplate">${templates.map(t=>`<option value="${t.id}">${escapeHtml(t.name)}</option>`).join('')}</select></div>
+          <p class="field-label" style="margin-top:2px;">By date range</p>
+          <div class="field-row3">
+            <div class="field"><label>From</label><input type="date" id="bulkFrom"></div>
+            <div class="field"><label>To</label><input type="date" id="bulkTo"></div>
+            <div class="field"><label>On these weekdays</label>
+              <div class="day-strip">${['Mon','Tue','Wed','Thu','Fri'].map((d,i)=>`<label class="chk"><input type="checkbox" value="${i+1}" checked> ${d}</label>`).join('')}</div>
+            </div>
+          </div>
+          <button class="btn-secondary btn-sm" type="button" id="bulkAddRange">Add dates in range</button>
+          <p class="field-label" style="margin-top:18px;">Or paste specific dates <span class="settings-row-hint">(one per line or comma-separated, YYYY-MM-DD)</span></p>
+          <div class="field"><textarea id="bulkList" placeholder="2026-11-25, 2026-12-23"></textarea></div>
+          <button class="btn-secondary btn-sm" type="button" id="bulkAddList">Add these dates</button>
+        ` : `<p class="empty-state">Create a special schedule above first.</p>`}
+      </div>
+      <div class="card">
+        <p class="card-title">Assigned special dates <small>${dates.length}</small></p>
+        ${dates.length ? dates.map(d => {
+          const t = getSpecialSchedule(d.templateId);
+          return `<div class="sp-item"><div>${weekdayName(d.date)}, ${shortDate(d.date)}<span class="day-tag">${escapeHtml(t?t.name:'deleted schedule')}</span></div><div class="sp-actions"><button class="task-delete" data-del-date="${d.id}" aria-label="Remove">&times;</button></div></div>`;
+        }).join('') : '<p class="empty-state">No dates assigned yet.</p>'}
+      </div>
+    `;
+    byId('newSpecialSchedBtn').addEventListener('click', () => openSpecialScheduleModal(null));
+    qsa('[data-edit-t]', el).forEach(b => b.addEventListener('click', () => openSpecialScheduleModal(b.dataset.editT)));
+    qsa('[data-del-date]', el).forEach(b => b.addEventListener('click', () => {
+      state.specialDates = state.specialDates.filter(x=>x.id!==b.dataset.delDate);
+      saveState(); renderCurrentView(); toast('Removed');
+    }));
+    if(templates.length){
+      byId('bulkAddRange').addEventListener('click', () => {
+        const from = byId('bulkFrom').value, to = byId('bulkTo').value;
+        const templateId = byId('bulkTemplate').value;
+        if(!from || !to){ toast('Pick a start and end date','error'); return; }
+        let d = parseISO(from); const end = parseISO(to);
+        if(!d || !end || d > end){ toast('Check the date range','error'); return; }
+        const allowed = qsa('.day-strip input:checked', el).map(cb=>Number(cb.value));
+        let count = 0;
+        while(d <= end){
+          const iso = fmtISO(d);
+          if(allowed.includes(d.getDay())){
+            state.specialDates = state.specialDates.filter(x=>x.date!==iso);
+            state.specialDates.push({ id:uid(), date:iso, templateId });
+            count++;
+          }
+          d = addDays(d,1);
+        }
+        saveState(); renderCurrentView(); toast(count + ' date' + (count===1?'':'s') + ' added', count?'success':'error');
+      });
+      byId('bulkAddList').addEventListener('click', () => {
+        const templateId = byId('bulkTemplate').value;
+        const raw = byId('bulkList').value.split(/[,\n]/).map(x=>x.trim()).filter(Boolean);
+        let count = 0;
+        raw.forEach(txt => {
+          if(!/^\d{4}-\d{2}-\d{2}$/.test(txt) || !parseISO(txt)) return;
+          state.specialDates = state.specialDates.filter(x=>x.date!==txt);
+          state.specialDates.push({ id:uid(), date:txt, templateId });
+          count++;
+        });
+        if(!count){ toast('No valid dates found — use YYYY-MM-DD', 'error'); return; }
+        saveState(); renderCurrentView(); toast(count + ' date' + (count===1?'':'s') + ' added', 'success');
+      });
+    }
   }
 
   /* =========================================================
@@ -2619,8 +2685,6 @@
       <div class="settings-section">
         <h3>Profile</h3>
         <div class="settings-row"><span class="settings-row-label">Name</span><span class="mono">${escapeHtml(currentUser)}</span></div>
-        ${currentAccount ? `<div class="settings-row"><span class="settings-row-label">Email</span><span class="mono">${escapeHtml(currentAccount.email)}</span></div>
-        <div class="settings-row"><span class="settings-row-label">Password</span><button type="button" class="btn-ghost" id="changePwBtn">Change password</button></div>` : `<div class="settings-row"><span class="settings-row-label">Account</span><span class="mono">Demo mode (not saved to a server)</span></div>`}
       </div>
 
       <div class="settings-section">
@@ -2671,14 +2735,12 @@
         <div class="settings-row"><div><div class="settings-row-label">Export all data</div><div class="settings-row-hint">Assignments, classes, exams, notes, schedule, study sessions and settings as JSON.</div></div><button class="btn-secondary btn-sm" id="exportJsonBtn">Export JSON</button></div>
         <div class="settings-row"><div><div class="settings-row-label">Export assignments as CSV</div></div><button class="btn-secondary btn-sm" id="exportCsvBtn">Export CSV</button></div>
         <div class="settings-row"><div><div class="settings-row-label">Import data</div><div class="settings-row-hint">Replaces current data for this account with a previously exported file.</div></div><button class="btn-secondary btn-sm" id="importJsonBtn">Import JSON</button></div>
-        <div class="settings-row"><div><div class="settings-row-label">Import from a local account</div><div class="settings-row-hint">Bring in data saved in this browser from demo mode or an earlier login.</div></div><button class="btn-secondary btn-sm" id="importLocalBtn">Find local accounts</button></div>
         <div class="settings-row"><div><div class="settings-row-label">Load demo data</div></div><button class="btn-secondary btn-sm" id="loadDemoBtn">Load demo data</button></div>
         ${state.ui.demo ? `<div class="settings-row"><div><div class="settings-row-label">Remove demo data</div></div><button class="btn-secondary btn-sm" id="removeDemoBtn">Remove demo data</button></div>` : ''}
         <div class="settings-row"><div><div class="settings-row-label">Clear all data</div><div class="settings-row-hint">Permanently deletes everything for this account.</div></div><button class="btn-danger btn-sm" id="clearDataBtn">Clear data</button></div>
       </div>
     `;
 
-    if(byId('changePwBtn')) byId('changePwBtn').addEventListener('click', openChangePasswordModal);
     qsa('#setTheme button').forEach(b => b.addEventListener('click', () => { state.settings.theme=b.dataset.v; saveState(); applyTheme(); renderCurrentView(); }));
     byId('setDuration').addEventListener('change', (e) => { state.settings.defaultDuration = Number(e.target.value)||30; saveState(); });
     qsa('#setWeekStart button').forEach(b => b.addEventListener('click', () => { state.settings.weekStart=Number(b.dataset.v); saveState(); renderCurrentView(); }));
@@ -2698,7 +2760,6 @@
     byId('exportJsonBtn').addEventListener('click', exportJson);
     byId('exportCsvBtn').addEventListener('click', exportCsv);
     byId('importJsonBtn').addEventListener('click', () => byId('importFileInput').click());
-    byId('importLocalBtn').addEventListener('click', openImportLocalModal);
     byId('loadDemoBtn').addEventListener('click', () => {
       confirmDialog('Load demo data alongside your current data?', { confirmLabel:'Load demo data', danger:false, onConfirm(){
         seedDemoData(); saveState(); renderCurrentView(); toast('Demo data loaded');
@@ -2716,38 +2777,6 @@
       }});
     });
   };
-
-  function openChangePasswordModal(){
-    openModal({
-      title: 'Change password',
-      bodyHtml: `
-        <label class="field-label" for="cpCurrent">Current password</label>
-        <input type="password" id="cpCurrent" style="width:100%;padding:10px 4px;border:none;border-bottom:1.5px solid var(--ink);background:transparent;outline:none;margin-bottom:16px;" autocomplete="current-password">
-        <label class="field-label" for="cpNew">New password</label>
-        <input type="password" id="cpNew" style="width:100%;padding:10px 4px;border:none;border-bottom:1.5px solid var(--ink);background:transparent;outline:none;margin-bottom:16px;" autocomplete="new-password" minlength="8">
-        <p id="cpError" style="color:var(--overdue);font-size:12.5px;min-height:16px;margin:0;"></p>
-      `,
-      footerHtml: `<button class="btn-ghost" id="cpCancel">Cancel</button>
-        <div class="modal-footer-right"><button class="btn-primary" id="cpSubmit" style="width:auto;">Update password</button></div>`,
-      small: true,
-      onMount(){
-        byId('cpCancel').addEventListener('click', closeModal);
-        byId('cpSubmit').addEventListener('click', async () => {
-          const cur = byId('cpCurrent').value;
-          const next = byId('cpNew').value;
-          const err = byId('cpError');
-          if(!cur || !next){ err.textContent = 'Fill in both fields.'; return; }
-          if(next.length < 8){ err.textContent = 'New password must be at least 8 characters.'; return; }
-          byId('cpSubmit').disabled = true;
-          const res = await Api.changePassword(cur, next);
-          byId('cpSubmit').disabled = false;
-          if(!res.ok){ err.textContent = res.error; return; }
-          closeModal();
-          toast('Password updated');
-        });
-      }
-    });
-  }
 
   async function syncCanvas(){
     const domainRaw = byId('canvasDomainInput').value.trim();
@@ -2861,109 +2890,6 @@
     reader.readAsText(file);
   });
 
-  /* ---------- import from another local account on this device ----------
-     Finds Docket data saved in this browser under a different name (e.g.
-     demo mode, or an account from before this device was pointed at the
-     current Supabase backend) and lets it be merged or copied into the
-     currently signed-in account. Nothing here reaches across browsers or
-     devices — it only reads localStorage.getItem(). */
-  function findLocalAccounts(){
-    const prefix = STORAGE_PREFIX + ':data:v2:';
-    const found = [];
-    try{
-      for(let i=0;i<localStorage.length;i++){
-        const key = localStorage.key(i);
-        if(!key || key.indexOf(prefix) !== 0) continue;
-        let parsed;
-        try{ parsed = JSON.parse(localStorage.getItem(key)); }catch(e){ continue; }
-        if(!parsed || typeof parsed !== 'object') continue;
-        found.push({
-          key,
-          username: key.slice(prefix.length),
-          counts: {
-            assignments: Array.isArray(parsed.assignments) ? parsed.assignments.length : 0,
-            classes: Array.isArray(parsed.classes) ? parsed.classes.length : 0,
-            notes: Array.isArray(parsed.notes) ? parsed.notes.length : 0
-          }
-        });
-      }
-    }catch(e){}
-    return found;
-  }
-
-  // Adds an incoming state's data into the currently loaded `state`, matching
-  // classes by name (so "Biology" in both doesn't become two separate
-  // classes) and giving everything else fresh ids so nothing collides.
-  function mergeIncomingState(raw){
-    const incoming = migrateState(Object.assign(defaultState(raw.user || 'Imported'), raw));
-    const classIdMap = {};
-    incoming.classes.forEach(c => {
-      const existing = state.classes.find(ec => ec.name.trim().toLowerCase() === (c.name||'').trim().toLowerCase());
-      if(existing){ classIdMap[c.id] = existing.id; }
-      else{ const copy = Object.assign({}, c, { id: uid() }); classIdMap[c.id] = copy.id; state.classes.push(copy); }
-    });
-    incoming.assignments.forEach(a => {
-      const copy = Object.assign({}, a, { id: uid() });
-      if(copy.classId && classIdMap[copy.classId]) copy.classId = classIdMap[copy.classId];
-      linkAssignmentToClass(copy);
-      state.assignments.push(copy);
-    });
-    incoming.exams.forEach(x => state.exams.push(Object.assign({}, x, { id: uid() })));
-    incoming.notes.forEach(n => state.notes.push(Object.assign({}, n, { id: uid() })));
-    incoming.studySessions.forEach(s => state.studySessions.push(Object.assign({}, s, { id: uid() })));
-    logActivity('import', 'Merged in data from a local account (' + (raw.user || 'unnamed') + ')');
-  }
-
-  function openImportLocalModal(){
-    const accounts = findLocalAccounts();
-    if(!accounts.length){ toast('No local Docket data found in this browser.', 'error'); return; }
-    const rows = accounts.map(acc => `
-      <div class="settings-row" style="align-items:flex-start;">
-        <div>
-          <div class="settings-row-label">${escapeHtml(acc.username)}</div>
-          <div class="settings-row-hint">${acc.counts.assignments} assignment${acc.counts.assignments===1?'':'s'}, ${acc.counts.classes} class${acc.counts.classes===1?'':'es'}, ${acc.counts.notes} note${acc.counts.notes===1?'':'s'}</div>
-        </div>
-        <div style="display:flex;gap:8px;flex-shrink:0;">
-          <button type="button" class="btn-secondary btn-sm" data-key="${escapeHtml(acc.key)}" data-mode="merge">Merge in</button>
-          <button type="button" class="btn-danger btn-sm" data-key="${escapeHtml(acc.key)}" data-mode="replace">Replace current</button>
-        </div>
-      </div>
-    `).join('');
-    openModal({
-      title: 'Import from a local account',
-      bodyHtml: `<p style="margin:0 0 12px;color:var(--muted);font-size:13px;">Docket data saved in this browser — from demo mode or an earlier login. <strong>Merge in</strong> adds it alongside ${escapeHtml(currentUser)}'s current data (matching classes by name). <strong>Replace current</strong> wipes ${escapeHtml(currentUser)}'s current data first.</p>${rows}`,
-      footerHtml: `<button class="btn-ghost" id="ilCancel">Close</button>`,
-      onMount(){
-        byId('ilCancel').addEventListener('click', closeModal);
-        qsa('#modalBody button[data-key]').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const key = btn.dataset.key, mode = btn.dataset.mode;
-            let incoming;
-            try{ incoming = JSON.parse(localStorage.getItem(key)); }catch(e){ toast('Could not read that local account.', 'error'); return; }
-            closeModal();
-            confirmDialog(
-              mode === 'replace'
-                ? 'Replace all of ' + currentUser + '\u2019s current data with this local account\u2019s data? This can\u2019t be undone.'
-                : 'Merge this local account\u2019s data into ' + currentUser + '\u2019s account?',
-              {
-                confirmLabel: mode === 'replace' ? 'Replace' : 'Merge',
-                onConfirm(){
-                  if(mode === 'replace'){
-                    state = migrateState(Object.assign(defaultState(currentUser), incoming, { user: currentUser }));
-                  } else {
-                    mergeIncomingState(incoming);
-                  }
-                  saveState(); renderCurrentView();
-                  toast(mode === 'replace' ? 'Data replaced' : 'Data merged in', 'success');
-                }
-              }
-            );
-          });
-        });
-      }
-    });
-  }
-
   /* =========================================================
      GLOBAL SEARCH
      ========================================================= */
@@ -3045,8 +2971,8 @@
   /* =========================================================
      INIT
      ========================================================= */
+  initLogin();
   applyTheme();
-  bootstrapSession();
 })();
 </script>
 
