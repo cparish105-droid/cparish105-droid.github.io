@@ -548,8 +548,8 @@
      redeploy. Leave them blank to run Docket in local-only
      mode (no accounts, data stays in this browser).
      ========================================================= */
-  const SUPABASE_URL = '';       // e.g. 'https://xxxxxxxx.supabase.co'
-  const SUPABASE_ANON_KEY = '';  // the "anon public" API key
+  const SUPABASE_URL = 'https://zbvbwzdlmazsoalpfeoh.supabase.co';      
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpidmJ3emRsbWF6c29hbHBmZW9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk5MTgxOTUsImV4cCI6MjEwNTQ5NDE5NX0.ErDEe8QXg8P5bKdI_uPDxoYeiPFMKSiEckqnGJPjMlI'; 
 
   const sb = (SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase)
     ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
