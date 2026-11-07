@@ -1854,6 +1854,12 @@
     rows.sort((a,b)=> a.start.localeCompare(b.start));
     return rows;
   }
+  function slotRangeLabel(s){
+    if(s.from && s.to) return shortDate(s.from) + ' – ' + shortDate(s.to);
+    if(s.from) return 'from ' + shortDate(s.from);
+    if(s.to) return 'until ' + shortDate(s.to);
+    return '';
+  }
   function slotActive(s, iso){ return !((s.from && iso < s.from) || (s.to && iso > s.to)); }
   function todaysSchedule(){ return scheduleForDate(todayISO()); }
   function dayTypeLabel(iso){
@@ -2770,7 +2776,7 @@
           if(!sbGridHasPicks()){ byId('sbNote').textContent = 'Pick at least one class first.'; return; }
           if(sbBlocks(bld).some(x => !x.start || !x.end || x.end <= x.start)){ byId('sbNote').textContent = 'Each time slot must end after it starts.'; return; }
           if(state.classes.some(c => (c.schedule||[]).length)){
-            confirmDialog('Replace your current weekly schedule with this one?', { confirmLabel:'Replace', onConfirm(){ sbApply(); } });
+            confirmDialog(bld.termStart ? 'Your current classes will end the day before ' + shortDate(bld.termStart) + ', and this schedule will start on ' + shortDate(bld.termStart) + '. Continue?' : 'Replace your current weekly schedule with this one?', { confirmLabel: bld.termStart ? 'Add new term' : 'Replace', onConfirm(){ sbApply(); } });
           } else { sbApply(); }
         });
       }
@@ -2844,7 +2850,7 @@
     'Rules:',
     '- scheduleType: "standard" if I have the same classes every day, "ab" if days alternate between A and B, "rotating" if days are numbered (1, 2, 3...).',
     '- periods: the normal bell schedule in time order. kind is "class", "lunch", or "flex" (advisory, study hall, WIN/flex time). Include lunch and flex rows where they happen in the day, even at the very start or end of the day. If the school has lunch waves (A/B/C lunch or split periods like 4A/4B/4C), include ONLY the wave that applies to me; ask me which one if it is not obvious.',
-    '- slots.day: "Every day" for standard, "A" or "B" for ab, or the day number for rotating. If a standard schedule has different classes on different weekdays, use "Mon", "Tue", "Wed", "Thu" or "Fri" instead (one slot per weekday the class meets). slots.period counts ONLY the rows with kind "class", starting at 1 in time order.',
+    '- slots.day: "Every day" for standard, "A" or "B" for ab, or the day number for rotating. If a standard schedule has different classes on different weekdays, use "Mon", "Tue", "Wed", "Thu" or "Fri" instead (one slot per weekday the class meets). slots.period is the number printed in that period\u2019s label (if the school calls a period "Period 19" or "Block 3", use 19 or 3), so always give every period a label exactly as the school writes it. If the periods have no numbers, count only the rows with kind "class", starting at 1 in time order.',
     '- specialSchedules: for days with a different bell schedule than normal (short days, early release, late start, advisory or assembly days), give the name, EVERY date it applies to, and its blocks in time order. Use the full class name for class blocks, or a label like "Advisory". Use [] if there are none.',
     '- Use 24-hour times (HH:MM) and dates as YYYY-MM-DD. Use full class names exactly as shown.',
     '- Put holidays, breaks and days off in noSchool. If something isn\'t shown, use "" or [] - do not guess.'
@@ -2862,10 +2868,18 @@
 
   function aiParseImport(raw){
     const arr = x => Array.isArray(x) ? x : [];
-    const txt = String(raw || '').trim();
+    const txt = String(raw || '')
+      .replace(/&#x([0-9a-f]+);/gi, (m, h) => String.fromCharCode(parseInt(h, 16)))
+      .replace(/&#(\d+);/g, (m, d) => String.fromCharCode(Number(d)))
+      .replace(/&nbsp;/gi, ' ').replace(/&quot;/gi, '"').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/&amp;/gi, '&')
+      .replace(/[\u00A0\u200B]/g, ' ')
+      .replace(/\\[ \t]*(\r?\n)/g, '$1')
+      .replace(/\\_/g, '_')
+      .trim();
     if(txt.indexOf('{') < 0) return { error:'No data found. Paste the whole reply from the AI chat.' };
     const tidy = t => t.replace(/^\s*\/\/.*$/gm, '').replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'").replace(/,\s*([}\]])/g, '$1').replace(/\bNone\b/g, 'null').replace(/\bTrue\b/g, 'true').replace(/\bFalse\b/g, 'false');
-    let o, firstErr = '';
+    let o, firstErr = '', fallback;
+    const looksRight = v => ['periods','classes','scheduleType','schedule_type','schoolYear','school_year'].some(k => v[k] !== undefined);
     for(let i = txt.indexOf('{'); i >= 0 && o === undefined; i = txt.indexOf('{', i + 1)){
       let depth = 0, inStr = false, esc = false, j = i;
       for(; j < txt.length; j++){
@@ -2877,10 +2891,11 @@
       }
       const cand = j < txt.length ? txt.slice(i, j + 1) : txt.slice(i);
       for(const c of [cand, tidy(cand)]){
-        try{ const v = JSON.parse(c); if(v && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length > 1){ o = v; break; } }
+        try{ const v = JSON.parse(c); if(v && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length > 0){ if(looksRight(v) || (v && Object.keys(v).some(k => v[k] && typeof v[k] === 'object' && looksRight(v[k])))){ o = v; } else if(!fallback) fallback = v; break; } }
         catch(e){ if(!firstErr) firstErr = String(e.message || e).slice(0, 90); }
       }
     }
+    if(o === undefined && fallback) o = fallback;
     if(o === undefined) return { error:'That reply isn’t valid JSON (' + (firstErr || 'unknown problem') + '). Ask the AI to reply with only the JSON, and make sure you copied all of it.' };
     if(!o || typeof o !== 'object') return { error:'That reply isn’t in the expected format.' };
     if(o.scheduleType === undefined && !Array.isArray(o)){
@@ -2953,14 +2968,29 @@
     } else if(eff === 'weekdays') cols = ['Mon','Tue','Wed','Thu','Fri'];
     else cols = ['Every day'];
 
+    const numOf = t => { const m = String(t == null ? '' : t).match(/\d+/); return m ? Number(m[0]) : NaN; };
+    const sameRow = (r, raw) => r && r.label && (r.label.toLowerCase() === String(raw).trim().toLowerCase() || (!isNaN(numOf(raw)) && numOf(r.label) === numOf(raw)));
+    // Maps whatever the AI wrote for "period" (an index, the school's own period number, or a name) to a class row position.
+    // -1 = unknown; -2 = it points at the flex/lunch row, which is handled separately.
+    const resolvePeriod = raw => {
+      const rs = String(raw == null ? '' : raw).trim(); if(!rs) return -1;
+      const low = rs.toLowerCase(), n = numOf(rs), cr = classRowIdx.map(i => kept[i]);
+      let k = cr.findIndex(r => r.label && r.label.toLowerCase() === low);
+      if(k < 0 && !isNaN(n)) k = cr.findIndex(r => numOf(r.label) === n);
+      if(k < 0 && !isNaN(n) && n >= 1 && n <= cr.length) k = n - 1;
+      if(k < 0 && isNaN(n)) k = cr.findIndex(r => r.label && (r.label.toLowerCase().indexOf(low) >= 0 || low.indexOf(r.label.toLowerCase()) >= 0));
+      if(k < 0 && ((flex && sameRow(flex.row, rs)) || (lunch && sameRow(lunch.row, rs)))) return -2;
+      return k;
+    };
     const classes = []; let everyNote = false;
     arr(o.classes).slice(0, 30).forEach(c => {
       const name = String((c && c.name) || '').trim().slice(0, 80);
       if(!name) return;
       const cls = { name, teacher: String(c.teacher || '').trim().slice(0, 60), room: String(c.room || '').trim().slice(0, 20), slots: [] };
       arr(c.slots).forEach(s => {
-        const p = Math.round(Number(String(s && s.period != null ? s.period : '').replace(/[^0-9.]/g, '')));
-        if(!(p >= 1 && p <= classRowIdx.length)){ issues.push(name + ': skipped a slot with an unknown period.'); return; }
+        const pk = resolvePeriod(s && s.period);
+        if(pk === -2) return;
+        if(pk < 0){ issues.push(name + ': skipped a slot with an unknown period (' + String(s && s.period).slice(0, 12) + ').'); return; }
         let d = String(s && s.day != null ? s.day : '').trim();
         let cis;
         if(type === 'ab'){ const mm = d.toUpperCase().match(/\b([AB])\b|^([AB])(?:\s*DAY)?$/); cis = [cols.indexOf(mm ? (mm[1] || mm[2]) : d.toUpperCase())]; }
@@ -2968,7 +2998,7 @@
         else if(eff === 'weekdays') cis = (!d || /^every/i.test(d)) ? [0, 1, 2, 3, 4] : [wdOf(d) - 1];
         else { cis = [0]; if(d && !/^every/i.test(d) && !everyNote){ everyNote = true; issues.push('Some day values weren\u2019t recognised, so those classes are treated as every day.'); } }
         if(cis.some(x => x < 0)){ issues.push(name + ': skipped a slot with an unknown day (' + d.slice(0, 10) + ').'); return; }
-        cis.forEach(ci => cls.slots.push({ c: ci, r: classRowIdx[p - 1] }));
+        cis.forEach(ci => cls.slots.push({ c: ci, r: classRowIdx[pk] }));
       });
       classes.push(cls);
     });
@@ -3189,7 +3219,7 @@
         <p class="view-sub">${escapeHtml(c.teacher||'')}${c.teacher&&c.room?' &middot; ':''}${escapeHtml(c.room||'')}</p>
         ${c.notes ? `<p>${escapeHtml(c.notes)}</p>` : ''}
         <p class="card-title">${mode==='ab' ? 'A/B block schedule' : 'Weekly schedule'}</p>
-        <div id="cdSchedList">${visibleSched.length ? visibleSched.slice().sort((a,b)=>compareDay(a.day,b.day)||a.start.localeCompare(b.start)).map(s=>`<div class="schedule-row">${dayLabelFor(s.day)} &middot; ${fmtTime12(s.start)}&ndash;${fmtTime12(s.end)} <button class="task-delete" data-sid="${s.id}" aria-label="Remove">&times;</button></div>`).join('') : `<p class="empty-state">No ${mode==='ab'?'A/B blocks':'weekly blocks'} yet.</p>`}</div>
+        <div id="cdSchedList">${visibleSched.length ? visibleSched.slice().sort((a,b)=>compareDay(a.day,b.day)||a.start.localeCompare(b.start)).map(s=>`<div class="schedule-row">${dayLabelFor(s.day)} &middot; ${fmtTime12(s.start)}&ndash;${fmtTime12(s.end)}${slotRangeLabel(s) ? ` <small style="color:var(--muted);${s.to && s.to < todayISO() ? 'text-decoration:line-through;' : ''}">${slotRangeLabel(s)}</small>` : ''} <button class="task-delete" data-sid="${s.id}" aria-label="Remove">&times;</button></div>`).join('') : `<p class="empty-state">No ${mode==='ab'?'A/B blocks':'weekly blocks'} yet.</p>`}</div>
         ${hiddenCount ? `<p class="settings-row-hint">${hiddenCount} block${hiddenCount===1?'':'s'} saved under the other schedule type ${mode==='ab'?'(weekday)':'(A/B)'} — switch schedule type in Classes to see ${hiddenCount===1?'it':'them'}.</p>` : ''}
         <div class="schedule-editor-row">
           <select id="cdDay">${scheduleDayOptions()}</select>
