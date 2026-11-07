@@ -2864,6 +2864,36 @@
     if(h > 23 || mi > 59) return '';
     return pad2(h) + ':' + pad2(mi);
   }
+  // Finds the bell-schedule list however the AI named it, and normalises each entry to {kind,label,start,end}.
+  function aiFindPeriods(o){
+    const pick = (p, keys) => { for(const k of keys){ const key = Object.keys(p).find(x => x.toLowerCase().replace(/[^a-z]/g, '') === k); if(key !== undefined && p[key] != null && p[key] !== '') return p[key]; } return undefined; };
+    const norm = p => {
+      if(!p || typeof p !== 'object') return null;
+      let st = pick(p, ['start','starttime','begin','begins','from','open']), en = pick(p, ['end','endtime','finish','ends','to','close','stop']);
+      const tm = pick(p, ['time','times','hours']);
+      if((st === undefined || en === undefined) && typeof tm === 'string'){ const parts = tm.split(/\s*(?:-|–|—|to)\s*/i); if(parts.length >= 2){ if(st === undefined) st = parts[0]; if(en === undefined) en = parts[1]; } }
+      if(st === undefined || en === undefined) return null;
+      const kind = pick(p, ['kind','type','category']);
+      const label = pick(p, ['label','name','period','title','block']);
+      return { kind: kind, label: label, start: st, end: en };
+    };
+    const tryList = list => { const out = (Array.isArray(list) ? list : []).map(norm); return out.length && out.every(Boolean) ? out : null; };
+    let found = tryList(o.periods);
+    if(found) return found;
+    for(const k of Object.keys(o)){
+      if(/^(classes|courses|specialschedules|noschool)/i.test(k.replace(/[^a-z]/gi, ''))) continue;
+      const v = o[k];
+      found = tryList(v);
+      if(found) return found;
+      if(v && typeof v === 'object' && !Array.isArray(v)){ // object keyed by period, e.g. {"1": {"start":..,"end":..}}
+        const list = Object.keys(v).map(kk => { const x = v[kk]; return (x && typeof x === 'object') ? Object.assign({ label: kk }, x) : null; });
+        found = list.length && list.every(Boolean) ? tryList(list) : null;
+        if(found) return found;
+      }
+    }
+    return [];
+  }
+  function numOf0(t){ const m = String(t == null ? '' : t).match(/\d+/); return m ? Number(m[0]) : NaN; }
   function aiToMin(t){ const p = String(t || '0:0').split(':').map(Number); return p[0] * 60 + p[1]; }
 
   function aiParseImport(raw){
@@ -2927,10 +2957,18 @@
     const WD = { mon:1, tue:2, wed:3, thu:4, fri:5 };
     const wdOf = d => WD[String(d == null ? '' : d).trim().slice(0, 3).toLowerCase()] || 0;
     const eff = (type === 'standard' && arr(o.classes).some(c => arr(c && c.slots).some(s => wdOf(s && s.day)))) ? 'weekdays' : type;
-    const rows = arr(o.periods).slice(0, 16).map(p => {
-      const k = String((p && p.kind) || 'class').toLowerCase();
+    const rows = aiFindPeriods(o).slice(0, 24).map(p => {
+      const k0 = String((p && p.kind) || '').toLowerCase(), k = k0 || (/lunch/i.test(String((p && p.label) || '')) ? 'lunch' : 'class');
       return { kind: (k === 'lunch' || k === 'flex') ? k : 'class', label: String((p && p.label) || '').trim().slice(0, 40), start: aiNormTime(p && p.start), end: aiNormTime(p && p.end) };
     });
+    let placeholderTimes = false;
+    if(!rows.length){
+      const nums = []; arr(o.classes).forEach(c => arr(c && c.slots).forEach(sl => { const n = numOf0(sl && sl.period); if(!isNaN(n) && nums.indexOf(n) < 0) nums.push(n); }));
+      nums.sort((x, y) => x - y);
+      nums.slice(0, 24).forEach((n, idx) => { const st = 8 * 60 + idx * 55; rows.push({ kind:'class', label:'Period ' + n, start: pad2(Math.floor(st / 60)) + ':' + pad2(st % 60), end: pad2(Math.floor((st + 50) / 60)) + ':' + pad2((st + 50) % 60) }); });
+      placeholderTimes = rows.length > 0;
+    }
+    if(placeholderTimes) issues.push('The reply had no period times, so placeholder times were used. Fix them in the next step.');
     if(!rows.length) return { error:'No class periods were found in the reply. The fields I could read were: ' + (Object.keys(o).join(', ').slice(0, 120) || 'none') + '. The AI needs to include a "periods" list with the start and end time of every period.' };
     if(rows.some(r => !r.start || !r.end || r.end <= r.start)) return { error:'Some period times are missing or invalid (use 24-hour HH:MM, each end after its start).' };
     rows.sort((x, y) => x.start.localeCompare(y.start));
@@ -3037,7 +3075,7 @@
   function openAiImport(prefill, errMsg){
     openModal({
       title:'Import from an AI chat', large:true,
-      bodyHtml:`<p class="view-sub">Free, and no extra account needed. <span style="opacity:.6">(importer v4)</span></p>
+      bodyHtml:`<p class="view-sub">Free, and no extra account needed. <span style="opacity:.6">(importer v5)</span></p>
         <ol style="margin:0 0 14px 18px;padding:0;font-size:13.5px;line-height:1.7;">
           <li>Tap <strong>Copy prompt</strong>.</li>
           <li>Open any free AI chat (Claude, ChatGPT, Gemini), attach screenshots of your class schedule and school calendar, and paste the prompt.</li>
