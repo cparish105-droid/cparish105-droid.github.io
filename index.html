@@ -220,6 +220,14 @@
   .btn-add{ background:var(--accent); color:var(--accent-ink); border:none; padding:8px 18px; border-radius:var(--radius-sm); cursor:pointer; white-space:nowrap; }
   .btn-add:hover{ filter:brightness(1.08); }
 
+  .sb-type{ display:block; width:100%; text-align:left; background:var(--paper); border:1px solid var(--card-border); border-radius:var(--radius); padding:12px 14px; margin-bottom:10px; cursor:pointer; color:var(--ink); }
+  .sb-type.sel{ border-color:var(--accent); background:var(--accent-soft); }
+  .sb-wrap{ overflow-x:auto; border:1px solid var(--line); border-radius:var(--radius-sm); }
+  .sb-table{ border-collapse:collapse; width:100%; min-width:320px; }
+  .sb-table th, .sb-table td{ padding:8px 10px; border-bottom:1px solid var(--line); text-align:left; font-size:13px; vertical-align:middle; }
+  .sb-table th{ font-weight:600; font-size:12px; color:var(--muted); }
+  .sb-table select{ width:100%; min-width:130px; background:var(--bg); border:1px solid var(--card-border); border-radius:var(--radius-sm); padding:6px 8px; }
+  .sb-time{ white-space:nowrap; font-weight:500; }
   .quick-preview{ font-size:12.5px; color:var(--muted); min-height:18px; margin:-14px 0 16px 0; }
   .toolbar{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:18px; }
   .toolbar select, .toolbar input[type="text"]{
@@ -663,7 +671,10 @@
         notifications: false,
         canvas: { domain:'', token:'', lastSynced:null, connected:false },
         scheduleMode: 'weekday', // 'weekday' | 'ab'
-        abAnchor: { date: todayISO(), letter: 'A' }
+        abAnchor: { date: todayISO(), letter: 'A' },
+        cycle: ['A','B'],
+        schoolYear: { start:'', end:'' },
+        noSchool: []
       },
       ui: { onboarded: false, demo:false }
     };
@@ -732,6 +743,9 @@
     s.specialDates = Array.isArray(s.specialDates) ? s.specialDates : [];
     if(!s.settings.scheduleMode) s.settings.scheduleMode = 'weekday';
     if(!s.settings.abAnchor || !s.settings.abAnchor.date) s.settings.abAnchor = { date: todayISO(), letter: 'A' };
+    if(!Array.isArray(s.settings.cycle) || !s.settings.cycle.length) s.settings.cycle = ['A','B'];
+    if(!s.settings.schoolYear) s.settings.schoolYear = { start:'', end:'' };
+    if(!Array.isArray(s.settings.noSchool)) s.settings.noSchool = [];
     // defensive fills for anything missing/corrupt
     s.assignments = Array.isArray(s.assignments) ? s.assignments.filter(a => a && typeof a === 'object') : [];
     s.assignments.forEach(a => {
@@ -1781,28 +1795,41 @@
     if(dow >= 5) return null;
     return Math.floor(days / 7) * 5 + dow;
   }
+  function cycleLabels(){ return (state.settings.cycle && state.settings.cycle.length) ? state.settings.cycle : ['A','B']; }
+  function isNoSchool(iso){ return (state.settings.noSchool || []).some(r => iso >= r.start && iso <= r.end); }
+  function outsideSchoolYear(iso){
+    const sy = state.settings.schoolYear;
+    return !!(sy && ((sy.start && iso < sy.start) || (sy.end && iso > sy.end)));
+  }
+  function isWeekendDate(d){ return d.getDay() === 0 || d.getDay() === 6; }
   function abLetterForDate(iso){
-    const anchor = (state.settings && state.settings.abAnchor) || { date: todayISO(), letter:'A' };
-    const wi = weekdaySeq(iso), wa = weekdaySeq(anchor.date);
-    if(wi === null) return null; // weekend, no rotation day
-    if(wa === null) return 'A';
-    const letters = ['A','B'];
-    let idx = letters.indexOf(anchor.letter); if(idx < 0) idx = 0;
-    idx = (((idx + (wi - wa)) % 2) + 2) % 2;
-    return letters[idx];
+    const cyc = cycleLabels();
+    const anchor = (state.settings && state.settings.abAnchor) || { date: todayISO(), letter: cyc[0] };
+    const d = parseISO(iso), a = parseISO(anchor.date);
+    if(!d || isWeekendDate(d) || isNoSchool(iso)) return null;
+    let idx = cyc.indexOf(anchor.letter); if(idx < 0) idx = 0;
+    if(!a) return cyc[idx];
+    let n = 0, guard = 0;
+    if(d >= a){
+      for(let x = addDays(a,1); x <= d && guard < 2000; x = addDays(x,1), guard++){ if(!isWeekendDate(x) && !isNoSchool(fmtISO(x))) n++; }
+    } else {
+      for(let x = addDays(a,-1); x >= d && guard < 2000; x = addDays(x,-1), guard++){ if(!isWeekendDate(x) && !isNoSchool(fmtISO(x))) n--; }
+    }
+    const L = cyc.length;
+    return cyc[(((idx + n) % L) + L) % L];
   }
   function specialDateEntry(iso){ return (state.specialDates||[]).find(x => x.date === iso) || null; }
   function getSpecialSchedule(id){ return (state.specialSchedules||[]).find(t => t.id === id) || null; }
   function scheduleDayOptions(){
-    if(state.settings.scheduleMode === 'ab') return ['A','B'].map(d => `<option value="${d}">${d} day</option>`).join('');
+    if(state.settings.scheduleMode === 'ab') return cycleLabels().map(d => `<option value="${d}">${dayLabelFor(d)}</option>`).join('');
     return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((d,i) => `<option value="${i}">${d}</option>`).join('');
   }
   function dayLabelFor(day){
-    if(typeof day === 'string') return day + ' day';
+    if(typeof day === 'string') return /^\d+$/.test(day) ? 'Day ' + day : day + ' day';
     const names = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     return names[day] || '';
   }
-  function compareDay(a,b){ return String(a).localeCompare(String(b)); }
+  function compareDay(a,b){ return String(a).localeCompare(String(b), undefined, { numeric:true }); }
   function scheduleForDate(iso){
     const sp = specialDateEntry(iso);
     if(sp){
@@ -1813,6 +1840,7 @@
         return { name: cls ? cls.name : (b.label || 'Block'), start:b.start, end:b.end, color: cls ? cls.color : 'var(--muted)', special:true, specialName: tmpl.name };
       });
     }
+    if(isNoSchool(iso) || outsideSchoolYear(iso)) return [];
     const rows = [];
     if(state.settings.scheduleMode === 'ab'){
       const letter = abLetterForDate(iso);
@@ -1830,7 +1858,8 @@
   function dayTypeLabel(iso){
     const sp = specialDateEntry(iso);
     if(sp){ const tmpl = getSpecialSchedule(sp.templateId); return tmpl ? tmpl.name : null; }
-    if(state.settings.scheduleMode === 'ab'){ const l = abLetterForDate(iso); return l ? l + ' day' : null; }
+    if(isNoSchool(iso)) return 'No school';
+    if(state.settings.scheduleMode === 'ab'){ const l = abLetterForDate(iso); return l ? dayLabelFor(l) : null; }
     return null;
   }
   function nextClassToday(){
@@ -2417,7 +2446,7 @@
     byId('calTitle').textContent = ui.calDate.toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'});
     const evs = eventsForDate(iso);
     const sched = scheduleForDate(iso);
-    const dayLabel = specialDateEntry(iso) ? (sched[0] && sched[0].specialName) : (state.settings.scheduleMode==='ab' ? (abLetterForDate(iso) ? abLetterForDate(iso)+' day' : null) : null);
+    const dayLabel = specialDateEntry(iso) ? (sched[0] && sched[0].specialName) : (state.settings.scheduleMode==='ab' ? (abLetterForDate(iso) ? dayLabelFor(abLetterForDate(iso)) : null) : null);
     body.innerHTML = `
       <div class="card"><p class="card-title">Classes${dayLabel?`<small>${escapeHtml(dayLabel)}</small>`:''}</p>${sched.length?sched.map(s=>`<div class="schedule-row"><span class="schedule-time">${fmtTime12(s.start)}</span><span class="class-dot" style="background:${s.color}"></span>${escapeHtml(s.name)}</div>`).join(''):'<p class="empty-state">No classes.</p>'}</div>
       <div class="card"><p class="card-title">Due / exams <button class="btn-ghost" data-newat="${iso}">+ add</button></p>
@@ -2452,7 +2481,7 @@
     el.innerHTML = `
       <div class="view-header">
         <div><h1 class="view-title">My Classes</h1><p class="view-sub">${state.classes.length} class${state.classes.length===1?'':'es'}</p></div>
-        <div class="view-actions">${ui.classesTab!=='special' ? '<button class="btn-primary" style="width:auto;" id="classNewBtn">+ New class</button>' : ''}</div>
+        <div class="view-actions"><button class="btn-secondary" id="schedBuilderBtn">Schedule builder</button>${ui.classesTab!=='special' ? '<button class="btn-primary" style="width:auto;" id="classNewBtn">+ New class</button>' : ''}</div>
       </div>
       <div class="tabs" id="classTabs">
         <button class="tab ${ui.classesTab!=='special'?'active':''}" data-tab="list">Classes &amp; schedule</button>
@@ -2461,25 +2490,23 @@
       <div id="classTabBody"></div>
     `;
     qsa('.tab', byId('classTabs')).forEach(t => t.addEventListener('click', () => { ui.classesTab = t.dataset.tab; renderCurrentView(); }));
+    byId('schedBuilderBtn').addEventListener('click', openScheduleBuilder);
     if(ui.classesTab === 'special'){
       renderSpecialDaysTab(byId('classTabBody'));
     } else {
       byId('classTabBody').innerHTML = `
         <div class="card">
           <p class="card-title">Schedule type</p>
-          <div class="segmented" id="schedModeToggle" style="width:280px;">
+          <div class="segmented" id="schedModeToggle" style="width:380px; max-width:100%;">
             <button type="button" data-v="weekday" class="${state.settings.scheduleMode!=='ab'?'active':''}">Same every week</button>
-            <button type="button" data-v="ab" class="${state.settings.scheduleMode==='ab'?'active':''}">A/B block schedule</button>
+            <button type="button" data-v="ab" class="${state.settings.scheduleMode==='ab'?'active':''}">Rotating days (A/B, 1–6…)</button>
           </div>
           ${state.settings.scheduleMode==='ab' ? `
             <div class="rot-row" style="margin-top:14px;">
               <span class="settings-row-label">On</span>
               <input type="date" id="abAnchorDate" value="${state.settings.abAnchor.date}">
-              <span class="settings-row-label">the schedule is a(n)</span>
-              <div class="segmented" id="abAnchorLetter" style="width:130px;">
-                <button type="button" data-v="A" class="${state.settings.abAnchor.letter==='A'?'active':''}">A day</button>
-                <button type="button" data-v="B" class="${state.settings.abAnchor.letter==='B'?'active':''}">B day</button>
-              </div>
+              <span class="settings-row-label">it is</span>
+              <select id="abAnchorLetter">${cycleLabels().map(l => `<option value="${l}" ${state.settings.abAnchor.letter===l?'selected':''}>${dayLabelFor(l)}</option>`).join('')}</select>
             </div>
             <p class="settings-row-hint">Weekends don't count — the rotation only alternates on school days. Add each class's A-day and B-day blocks from its class page below.</p>
           ` : `<p class="settings-row-hint" style="margin-top:10px;">Switch to A/B if your school alternates classes on a two-day block rotation instead of the same schedule every weekday.</p>`}
@@ -2496,14 +2523,251 @@
           state.settings.abAnchor.date = byId('abAnchorDate').value || todayISO();
           saveState(); renderCurrentView();
         });
-        qsa('#abAnchorLetter button').forEach(b => b.addEventListener('click', () => {
-          state.settings.abAnchor.letter = b.dataset.v;
+        byId('abAnchorLetter').addEventListener('change', (e) => {
+          state.settings.abAnchor.letter = e.target.value;
           saveState(); renderCurrentView();
-        }));
+        });
       }
       renderClassList();
     }
   };
+
+  /* =========================================================
+     SCHEDULE BUILDER (part 1: templates + year range)
+     ========================================================= */
+  const SB_TYPES = [
+    { id:'standard', name:'Standard periods', desc:'Same classes every day, e.g. 7 periods Monday to Friday.' },
+    { id:'ab', name:'A/B block', desc:'Two alternating days (A and B) with longer blocks.' },
+    { id:'rotating', name:'Rotating days', desc:'Numbered days (e.g. a 6-day cycle) that rotate through the periods.' },
+    { id:'fourday', name:'Four-day week', desc:'Standard day, with one day off every week.' },
+    { id:'flex', name:'Flex / advisory', desc:'Standard day with a flex, advisory or study block.' }
+  ];
+  const SB_DEFAULTS = {
+    standard:{ periods:7, len:50, pass:5, dayStart:'08:00' },
+    ab:{ periods:4, len:85, pass:5, dayStart:'08:30' },
+    rotating:{ periods:6, len:50, pass:5, dayStart:'08:00' },
+    fourday:{ periods:7, len:60, pass:5, dayStart:'08:00' },
+    flex:{ periods:7, len:50, pass:5, dayStart:'08:00' }
+  };
+  let bld = null;
+
+  function sbColumns(b){
+    if(b.type === 'ab') return ['A','B'];
+    if(b.type === 'rotating'){ const n = []; for(let i=1;i<=b.cycleN;i++) n.push(String(i)); return n; }
+    return ['Every day'];
+  }
+  function sbBlocks(b){
+    const out = []; let off = 0;
+    for(let i=0;i<b.periods;i++){
+      out.push({ label:(b.type==='ab' ? 'Block ' : 'Period ') + (i+1), start:addMinutesToTime(b.dayStart, off), end:addMinutesToTime(b.dayStart, off + b.len) });
+      off += b.len + b.pass;
+      if(b.type === 'flex' && i+1 === b.flexAfter){
+        out.push({ label:'Flex / advisory', start:addMinutesToTime(b.dayStart, off), end:addMinutesToTime(b.dayStart, off + b.flexLen), flex:true });
+        off += b.flexLen + b.pass;
+      }
+      if(b.lunchAfter && i+1 === b.lunchAfter){
+        out.push({ label:'Lunch', start:addMinutesToTime(b.dayStart, off), end:addMinutesToTime(b.dayStart, off + b.lunchLen), lunch:true });
+        off += b.lunchLen + b.pass;
+      }
+    }
+    const t = b.times || {};
+    out.forEach((blk, i) => { if(t[i] && t[i].s && t[i].e){ blk.start = t[i].s; blk.end = t[i].e; } });
+    return out;
+  }
+  function parseNoSchool(text){
+    const out = [];
+    String(text||'').split(/\n|,|;/).map(x => x.trim()).filter(Boolean).forEach(part => {
+      const m = part.match(/^(\d{4}-\d{2}-\d{2})(?:\s*(?:to|through|–|-)\s*(\d{4}-\d{2}-\d{2}))?$/i);
+      if(!m || !parseISO(m[1])) return;
+      const end = m[2] && parseISO(m[2]) ? m[2] : m[1];
+      out.push({ start: m[1] <= end ? m[1] : end, end: m[1] <= end ? end : m[1] });
+    });
+    return out;
+  }
+  function noSchoolText(){
+    return (state.settings.noSchool || []).map(r => r.start === r.end ? r.start : r.start + ' to ' + r.end).join('\n');
+  }
+
+  function openScheduleBuilder(){
+    const sy = state.settings.schoolYear || {};
+    bld = Object.assign({ step:0, type:'standard', start: sy.start || todayISO(), end: sy.end || '', cycleN:6, firstLabel:'A', dayOff:5, flexAfter:4, flexLen:30, lunchAfter:0, lunchLen:30, lateDay:0, lateStart:'09:30', times:{}, timesSig:'', noSchool: noSchoolText(), grid:null, gridKey:'' }, SB_DEFAULTS.standard);
+    renderBuilder();
+  }
+
+  function sbReadStep1(){
+    const g = id => byId(id) ? byId(id).value : '';
+    bld.start = g('sbStart'); bld.end = g('sbEnd');
+    bld.dayStart = g('sbDayStart') || bld.dayStart;
+    bld.len = Number(g('sbLen')); bld.pass = Number(g('sbPass')); bld.periods = Number(g('sbPeriods'));
+    if(byId('sbCycleN')) bld.cycleN = Number(g('sbCycleN'));
+    if(byId('sbFirst')) bld.firstLabel = g('sbFirst');
+    if(byId('sbOff')) bld.dayOff = Number(g('sbOff'));
+    if(byId('sbFlexLen')) bld.flexLen = Number(g('sbFlexLen'));
+    if(byId('sbFlexAfter')) bld.flexAfter = Number(g('sbFlexAfter'));
+    if(byId('sbLateDay')){ bld.lateDay = Number(g('sbLateDay')) || 0; bld.lateStart = g('sbLateStart') || bld.lateStart; }
+    if(byId('sbLunchAfter')) bld.lunchAfter = Number(g('sbLunchAfter')) || 0;
+    if(byId('sbLunchLen')) bld.lunchLen = Number(g('sbLunchLen')) || 30;
+    bld.noSchool = g('sbNoSchool');
+    const sig = [bld.type, bld.dayStart, bld.len, bld.pass, bld.periods, bld.flexAfter, bld.flexLen, bld.lunchAfter, bld.lunchLen].join('|');
+    if(bld.timesSig !== sig){ bld.times = {}; bld.timesSig = sig; }
+    if(!parseISO(bld.start) || !parseISO(bld.end)) return 'Enter the first and last day of school.';
+    if(bld.end <= bld.start) return 'The last day must be after the first day.';
+    if(!(bld.periods >= 1 && bld.periods <= 12)) return 'Periods per day should be 1–12.';
+    if(!(bld.len >= 10 && bld.len <= 180)) return 'Class length should be 10–180 minutes.';
+    if(!(bld.pass >= 0 && bld.pass <= 30)) return 'Passing time should be 0–30 minutes.';
+    if(bld.type === 'rotating' && !(bld.cycleN >= 2 && bld.cycleN <= 10)) return 'Rotation length should be 2–10 days.';
+    if(bld.type === 'flex' && !(bld.flexAfter >= 1 && bld.flexAfter < bld.periods)) return 'Put the flex block after a period between 1 and ' + (bld.periods-1) + '.';
+    if(bld.lunchAfter && !(bld.lunchAfter >= 1 && bld.lunchAfter < bld.periods)) return 'Put lunch after a period between 1 and ' + (bld.periods-1) + ', or 0 for none.';
+    if(bld.lunchAfter && !(bld.lunchLen >= 10 && bld.lunchLen <= 90)) return 'Lunch should be 10–90 minutes.';
+    if(bld.lunchAfter && bld.type === 'flex' && bld.lunchAfter === bld.flexAfter) return 'Lunch and the flex block can\'t both come after the same period.';
+    return '';
+  }
+
+  function sbReadGrid(){
+    qsa('.sb-ts').forEach(inp => {
+      const r = Number(inp.dataset.r), e = qs('.sb-te[data-r="' + r + '"]');
+      if(inp.value && e && e.value){ if(!bld.times) bld.times = {}; bld.times[r] = { s: inp.value, e: e.value }; }
+    });
+    const sels = qsa('.sb-sel');
+    if(!sels.length) return;
+    if(!bld.grid) bld.grid = [];
+    sels.forEach(sel => {
+      const c = Number(sel.dataset.c), r = Number(sel.dataset.r);
+      if(!bld.grid[c]) bld.grid[c] = [];
+      bld.grid[c][r] = sel.value;
+    });
+  }
+  function sbGridHasPicks(){ return (bld.grid || []).some(col => (col || []).some(v => v)); }
+  function sbEnsureGrid(){
+    const cols = sbColumns(bld), blocks = sbBlocks(bld);
+    const key = [bld.type, bld.periods, bld.cycleN, bld.flexAfter, bld.lunchAfter].join('|');
+    if(bld.gridKey !== key || !bld.grid){
+      bld.gridKey = key; bld.grid = [];
+      if(cols.length === 1){
+        bld.grid[0] = []; let k = 0;
+        blocks.forEach((blk, ri) => { if(!blk.flex && !blk.lunch){ bld.grid[0][ri] = state.classes[k] ? state.classes[k].id : ''; k++; } });
+      }
+    }
+  }
+
+  function renderBuilder(){
+    const step = bld.step;
+    const dots = [0,1,2].map(i => `<div class="wizard-dot ${i<step?'done':i===step?'active':''}"></div>`).join('');
+    let body = '', footer = '';
+    if(step === 0){
+      body = `<p class="view-sub">What kind of schedule does your school use?</p>` + SB_TYPES.map(t => `
+        <button type="button" class="sb-type ${bld.type===t.id?'sel':''}" data-t="${t.id}"><strong>${t.name}</strong><br><span class="settings-row-hint">${t.desc}</span></button>`).join('') +
+        `<p class="settings-row-hint">Short days, advisory days and other one-off schedules can be added afterwards under Classes &rarr; Special days.</p>`;
+      footer = `<button class="btn-ghost" id="sbCancel">Cancel</button><div class="modal-footer-right"><button class="btn-primary" style="width:auto;" id="sbNext">Next</button></div>`;
+    } else if(step === 1){
+      const t = bld.type;
+      body = `<p class="view-sub">The basics &mdash; Docket will fill in every school day between these dates.</p>
+        <div class="field-row"><div class="field"><label for="sbStart">First day of school</label><input type="date" id="sbStart" value="${bld.start}"></div>
+        <div class="field"><label for="sbEnd">Last day of school</label><input type="date" id="sbEnd" value="${bld.end}"></div></div>
+        <div class="field-row3"><div class="field"><label for="sbDayStart">Day starts at</label><input type="time" id="sbDayStart" value="${bld.dayStart}"></div>
+        <div class="field"><label for="sbPeriods">${t==='ab'?'Blocks':'Periods'} per day</label><input type="number" id="sbPeriods" min="1" max="12" value="${bld.periods}"></div>
+        <div class="field"><label for="sbLen">Class length (min)</label><input type="number" id="sbLen" min="10" max="180" step="5" value="${bld.len}"></div></div>
+        <div class="field-row"><div class="field"><label for="sbPass">Passing time (min)</label><input type="number" id="sbPass" min="0" max="30" value="${bld.pass}"></div>
+        ${t==='rotating' ? `<div class="field"><label for="sbCycleN">Days in the rotation</label><input type="number" id="sbCycleN" min="2" max="10" value="${bld.cycleN}"></div>` : ''}
+        ${t==='ab' ? `<div class="field"><label for="sbFirst">First day of school is an</label><select id="sbFirst"><option value="A" ${bld.firstLabel==='A'?'selected':''}>A day</option><option value="B" ${bld.firstLabel==='B'?'selected':''}>B day</option></select></div>` : ''}
+        ${t==='fourday' ? `<div class="field"><label for="sbOff">Day off each week</label><select id="sbOff">${['Mon','Tue','Wed','Thu','Fri'].map((d,i)=>`<option value="${i+1}" ${bld.dayOff===i+1?'selected':''}>${d}</option>`).join('')}</select></div>` : ''}
+        ${t==='standard' ? '<div></div>' : ''}</div>
+        ${t==='flex' ? `<div class="field-row"><div class="field"><label for="sbFlexAfter">Flex block comes after period</label><input type="number" id="sbFlexAfter" min="1" value="${bld.flexAfter}"></div>
+        <div class="field"><label for="sbFlexLen">Flex block length (min)</label><input type="number" id="sbFlexLen" min="10" max="120" step="5" value="${bld.flexLen}"></div></div>` : ''}
+        ${(t==='ab'||t==='rotating') ? '' : `<div class="field-row"><div class="field"><label for="sbLateDay">Different start time on one weekday</label><select id="sbLateDay"><option value="0" ${!bld.lateDay?'selected':''}>None</option>${['Mon','Tue','Wed','Thu','Fri'].map((d,i)=>`<option value="${i+1}" ${bld.lateDay===i+1?'selected':''}>${d}</option>`).join('')}</select></div>
+        <div class="field"><label for="sbLateStart">Starts at (late / early start)</label><input type="time" id="sbLateStart" value="${bld.lateStart}"></div></div>`}
+        <div class="field-row"><div class="field"><label for="sbLunchAfter">Lunch comes after period (0 = none)</label><input type="number" id="sbLunchAfter" min="0" value="${bld.lunchAfter||0}"></div>
+        <div class="field"><label for="sbLunchLen">Lunch length (min)</label><input type="number" id="sbLunchLen" min="10" max="90" step="5" value="${bld.lunchLen||30}"></div></div>
+        <div class="field"><label for="sbNoSchool">No-school dates (optional)</label><textarea id="sbNoSchool" placeholder="2026-11-25 to 2026-11-27&#10;2026-12-21 to 2027-01-01">${escapeHtml(bld.noSchool)}</textarea>
+        <p class="settings-row-hint">One per line: a date or a range (YYYY-MM-DD to YYYY-MM-DD). ${t==='ab'||t==='rotating' ? 'The rotation skips these days.' : ''}</p></div>
+        <p class="login-note" id="sbNote"></p>`;
+      footer = `<button class="btn-ghost" id="sbBack">Back</button><div class="modal-footer-right"><button class="btn-primary" style="width:auto;" id="sbNext">Next</button></div>`;
+    } else {
+      sbEnsureGrid();
+      const cols = sbColumns(bld), blocks = sbBlocks(bld);
+      const opts = sel => `<option value="">— free —</option>` + state.classes.map(c => `<option value="${c.id}" ${sel===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join('');
+      body = `<p class="view-sub">Pick the class for each slot. You can edit any time slot&rsquo;s start and end. Generating replaces your current weekly schedule.</p>
+        <div class="field"><label for="sbNewClasses">Need more classes? Type full names, one per line</label><textarea id="sbNewClasses" style="min-height:56px;" placeholder="Literature of the Americas&#10;Algebra II"></textarea>
+        <button class="btn-secondary btn-sm" type="button" id="sbAddClasses" style="margin-top:6px;">Add classes</button></div>
+        <div class="sb-wrap"><table class="sb-table"><thead><tr><th></th>${cols.map(c => `<th>${cols.length>1 ? escapeHtml(dayLabelFor(c)) : 'Every day'}</th>`).join('')}</tr></thead><tbody>
+        ${blocks.map((blk, ri) => `<tr><td class="sb-time">${blk.label}<br><input type="time" class="sb-ts" data-r="${ri}" value="${blk.start}" aria-label="${blk.label} start" style="width:104px;padding:3px 4px;"> <input type="time" class="sb-te" data-r="${ri}" value="${blk.end}" aria-label="${blk.label} end" style="width:104px;padding:3px 4px;"></td>
+          ${cols.map((c, ci) => (blk.flex || blk.lunch) ? `<td class="settings-row-hint">${blk.lunch ? 'Lunch' : 'Flex / advisory'}</td>` : `<td><select class="sb-sel" data-c="${ci}" data-r="${ri}">${opts((bld.grid[ci]||[])[ri]||'')}</select></td>`).join('')}</tr>`).join('')}
+        </tbody></table></div>
+        <p class="login-note" id="sbNote"></p>`;
+      footer = `<button class="btn-ghost" id="sbBack">Back</button><div class="modal-footer-right"><button class="btn-primary" style="width:auto;" id="sbGo">Generate schedule</button></div>`;
+    }
+    openModal({
+      title:'Schedule builder', large:true,
+      bodyHtml:`<div class="wizard-steps">${dots}</div>${body}`,
+      footerHtml: footer,
+      onMount(){
+        qsa('.sb-type').forEach(b => b.addEventListener('click', () => {
+          bld.type = b.dataset.t; Object.assign(bld, SB_DEFAULTS[bld.type]); bld.grid = null;
+          qsa('.sb-type').forEach(x => x.classList.toggle('sel', x === b));
+        }));
+        if(byId('sbCancel')) byId('sbCancel').addEventListener('click', closeModal);
+        if(byId('sbBack')) byId('sbBack').addEventListener('click', () => { if(step === 1) sbReadStep1(); else sbReadGrid(); bld.step--; renderBuilder(); });
+        if(byId('sbNext')) byId('sbNext').addEventListener('click', () => {
+          if(step === 1){ const err = sbReadStep1(); if(err){ byId('sbNote').textContent = err; return; } }
+          bld.step++; renderBuilder();
+        });
+        if(byId('sbAddClasses')) byId('sbAddClasses').addEventListener('click', () => {
+          sbReadGrid();
+          const names = byId('sbNewClasses').value.split('\n').map(x => x.trim()).filter(Boolean);
+          let added = 0;
+          names.forEach(n => {
+            if(state.classes.some(c => c.name.toLowerCase() === n.toLowerCase())) return;
+            state.classes.push({ id:uid(), name:n, teacher:'', room:'', color: CLASS_COLORS[state.classes.length % CLASS_COLORS.length], schedule:[], notes:'', created:Date.now() });
+            added++;
+          });
+          if(added){ saveState(); if(!sbGridHasPicks()) bld.grid = null; toast(added + ' class' + (added===1?'':'es') + ' added', 'success'); }
+          renderBuilder();
+        });
+        if(byId('sbGo')) byId('sbGo').addEventListener('click', () => {
+          sbReadGrid();
+          if(!sbGridHasPicks()){ byId('sbNote').textContent = 'Pick at least one class first.'; return; }
+          if(sbBlocks(bld).some(x => !x.start || !x.end || x.end <= x.start)){ byId('sbNote').textContent = 'Each time slot must end after it starts.'; return; }
+          if(state.classes.some(c => (c.schedule||[]).length)){
+            confirmDialog('Replace your current weekly schedule with this one?', { confirmLabel:'Replace', onConfirm(){ sbApply(); } });
+          } else { sbApply(); }
+        });
+      }
+    });
+  }
+
+  function sbApply(){
+    const b = bld, blocks = sbBlocks(b), cols = sbColumns(b);
+    const rot = b.type === 'ab' || b.type === 'rotating';
+    const toMin = t => { const [h,m] = String(t||'0:0').split(':').map(Number); return h*60 + m; };
+    state.classes.forEach(c => { c.schedule = []; });
+    let flexCls = null;
+    if(b.type === 'flex'){
+      flexCls = state.classes.find(c => c.name === 'Flex / Advisory');
+      if(!flexCls){ flexCls = { id:uid(), name:'Flex / Advisory', teacher:'', room:'', color:'#7A5C7E', schedule:[], notes:'', created:Date.now() }; state.classes.push(flexCls); }
+    }
+    const days = [1,2,3,4,5].filter(d => !(b.type === 'fourday' && d === b.dayOff));
+    blocks.forEach((blk, ri) => cols.forEach((col, ci) => {
+      if(blk.lunch) return;
+      const cid = blk.flex ? (flexCls && flexCls.id) : ((b.grid[ci] || [])[ri]);
+      const c = cid ? getClass(cid) : null;
+      if(!c) return;
+      if(rot) c.schedule.push({ id:uid(), day:col, start:blk.start, end:blk.end });
+      else days.forEach(d => {
+        const shift = (b.lateDay && d === b.lateDay) ? (toMin(b.lateStart) - toMin(b.dayStart)) : 0;
+        c.schedule.push({ id:uid(), day:d, start: shift ? addMinutesToTime(blk.start, shift) : blk.start, end: shift ? addMinutesToTime(blk.end, shift) : blk.end });
+      });
+    }));
+    state.settings.scheduleMode = rot ? 'ab' : 'weekday';
+    if(rot){ state.settings.cycle = cols.slice(); state.settings.abAnchor = { date: b.start, letter: b.type === 'ab' ? b.firstLabel : cols[0] }; }
+    state.settings.schoolYear = { start: b.start, end: b.end };
+    state.settings.noSchool = parseNoSchool(b.noSchool);
+    logActivity('add', 'Built a ' + (SB_TYPES.find(t => t.id === b.type) || {}).name + ' schedule');
+    saveState();
+    closeModal();
+    ui.classesTab = 'list';
+    setView('classes');
+    toast('Schedule built for ' + shortDate(b.start) + ' – ' + shortDate(b.end), 'success');
+  }
 
   function renderClassList(){
     const el = byId('classList'); if(!el) return;
