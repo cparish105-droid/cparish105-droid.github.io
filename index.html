@@ -2931,7 +2931,7 @@
       const k = String((p && p.kind) || 'class').toLowerCase();
       return { kind: (k === 'lunch' || k === 'flex') ? k : 'class', label: String((p && p.label) || '').trim().slice(0, 40), start: aiNormTime(p && p.start), end: aiNormTime(p && p.end) };
     });
-    if(!rows.length) return { error:'No class periods were found in the reply.' };
+    if(!rows.length) return { error:'No class periods were found in the reply. The fields I could read were: ' + (Object.keys(o).join(', ').slice(0, 120) || 'none') + '. The AI needs to include a "periods" list with the start and end time of every period.' };
     if(rows.some(r => !r.start || !r.end || r.end <= r.start)) return { error:'Some period times are missing or invalid (use 24-hour HH:MM, each end after its start).' };
     rows.sort((x, y) => x.start.localeCompare(y.start));
     const total = rows.filter(r => r.kind === 'class').length;
@@ -3037,7 +3037,7 @@
   function openAiImport(prefill, errMsg){
     openModal({
       title:'Import from an AI chat', large:true,
-      bodyHtml:`<p class="view-sub">Free, and no extra account needed.</p>
+      bodyHtml:`<p class="view-sub">Free, and no extra account needed. <span style="opacity:.6">(importer v4)</span></p>
         <ol style="margin:0 0 14px 18px;padding:0;font-size:13.5px;line-height:1.7;">
           <li>Tap <strong>Copy prompt</strong>.</li>
           <li>Open any free AI chat (Claude, ChatGPT, Gemini), attach screenshots of your class schedule and school calendar, and paste the prompt.</li>
