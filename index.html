@@ -1845,15 +1845,16 @@
     if(state.settings.scheduleMode === 'ab'){
       const letter = abLetterForDate(iso);
       if(!letter) return rows;
-      state.classes.forEach(c => (c.schedule||[]).forEach(s => { if(s.day === letter) rows.push({ name:c.name, start:s.start, end:s.end, color:c.color }); }));
+      state.classes.forEach(c => (c.schedule||[]).forEach(s => { if(s.day === letter && slotActive(s, iso)) rows.push({ name:c.name, start:s.start, end:s.end, color:c.color }); }));
     } else {
       const d = parseISO(iso); if(!d) return rows;
       const dow = d.getDay();
-      state.classes.forEach(c => (c.schedule||[]).forEach(s => { if(s.day === dow) rows.push({ name:c.name, start:s.start, end:s.end, color:c.color }); }));
+      state.classes.forEach(c => (c.schedule||[]).forEach(s => { if(s.day === dow && slotActive(s, iso)) rows.push({ name:c.name, start:s.start, end:s.end, color:c.color }); }));
     }
     rows.sort((a,b)=> a.start.localeCompare(b.start));
     return rows;
   }
+  function slotActive(s, iso){ return !((s.from && iso < s.from) || (s.to && iso > s.to)); }
   function todaysSchedule(){ return scheduleForDate(todayISO()); }
   function dayTypeLabel(iso){
     const sp = specialDateEntry(iso);
@@ -2606,7 +2607,7 @@
 
   function openScheduleBuilder(){
     const sy = state.settings.schoolYear || {};
-    bld = Object.assign({ step:0, type:'standard', start: sy.start || todayISO(), end: sy.end || '', cycleN:6, firstLabel:'A', dayOff:5, flexAfter:4, flexLen:30, lunchAfter:0, lunchLen:30, lateDay:0, lateStart:'09:30', times:{}, timesSig:'', noSchool: noSchoolText(), grid:null, gridKey:'' }, SB_DEFAULTS.standard);
+    bld = Object.assign({ step:0, type:'standard', start: sy.start || todayISO(), end: sy.end || '', cycleN:6, firstLabel:'A', dayOff:5, flexAfter:4, flexLen:30, lunchAfter:0, lunchLen:30, lateDay:0, lateStart:'09:30', termStart:'', times:{}, timesSig:'', noSchool: noSchoolText(), grid:null, gridKey:'' }, SB_DEFAULTS.standard);
     renderBuilder();
   }
 
@@ -2624,9 +2625,11 @@
     if(byId('sbLunchAfter')) bld.lunchAfter = Number(g('sbLunchAfter')) || 0;
     if(byId('sbLunchLen')) bld.lunchLen = Number(g('sbLunchLen')) || 30;
     bld.noSchool = g('sbNoSchool');
+    if(byId('sbTermStart')) bld.termStart = g('sbTermStart') || '';
     const sig = [bld.type, bld.dayStart, bld.len, bld.pass, bld.periods, bld.flexAfter, bld.flexLen, bld.lunchAfter, bld.lunchLen].join('|');
     if(bld.timesSig !== sig){ bld.times = {}; bld.timesSig = sig; }
     if(!parseISO(bld.start) || !parseISO(bld.end)) return 'Enter the first and last day of school.';
+    if(bld.termStart && (!parseISO(bld.termStart) || bld.termStart < bld.start || bld.termStart > bld.end)) return 'The new term should start between the first and last day of school (or leave it blank).';
     if(bld.end <= bld.start) return 'The last day must be after the first day.';
     if(!(bld.periods >= 1 && bld.periods <= 12)) return 'Periods per day should be 1–12.';
     if(!(bld.len >= 10 && bld.len <= 180)) return 'Class length should be 10–180 minutes.';
@@ -2694,6 +2697,10 @@
         <div class="field"><label for="sbLateStart">Starts at (late / early start)</label><input type="time" id="sbLateStart" value="${bld.lateStart}"></div></div>`}
         <div class="field-row"><div class="field"><label for="sbLunchAfter">Lunch</label><select id="sbLunchAfter">${sbPosOptions(bld.lunchAfter||0, bld.periods)}</select></div>
         <div class="field"><label for="sbLunchLen">Lunch length (min)</label><input type="number" id="sbLunchLen" min="10" max="90" step="5" value="${bld.lunchLen||30}"></div></div>
+        <div class="field"><label for="sbTermStart">New term / semester? Start this schedule on (optional)</label><input type="date" id="sbTermStart" value="${bld.termStart||''}">
+        <p class="settings-row-hint">Leave blank to replace your whole schedule. If you set a date, your current classes keep working until the day before and the new ones take over from then.</p></div>
+        <div class="field"><label for="sbTermStart">New term / semester? Start this schedule on (optional)</label><input type="date" id="sbTermStart" value="${bld.termStart||''}">
+        <p class="settings-row-hint">Leave blank to replace your whole schedule. If you set a date, your current classes keep working until the day before and the new ones take over from then.</p></div>
         <div class="field"><label for="sbNoSchool">No-school dates (optional)</label><textarea id="sbNoSchool" placeholder="2026-11-25 to 2026-11-27&#10;2026-12-21 to 2027-01-01">${escapeHtml(bld.noSchool)}</textarea>
         <p class="settings-row-hint">One per line: a date or a range (YYYY-MM-DD to YYYY-MM-DD). ${t==='ab'||t==='rotating' ? 'The rotation skips these days.' : ''}</p></div>
         <div class="field"><label>Year-round calendar? Fill in repeating breaks</label>
@@ -2776,7 +2783,16 @@
     const b = bld, blocks = sbBlocks(b), cols = sbColumns(b);
     const rot = b.type === 'ab' || b.type === 'rotating';
     const toMin = t => { const [h,m] = String(t||'0:0').split(':').map(Number); return h*60 + m; };
-    state.classes.forEach(c => { c.schedule = []; });
+    const ts = b.termStart && parseISO(b.termStart) ? b.termStart : '';
+    const prevMode = state.settings.scheduleMode;
+    if(ts){
+      const dayBefore = fmtISO(addDays(parseISO(ts), -1));
+      state.classes.forEach(c => {
+        c.schedule = (c.schedule||[]).filter(sl => !(sl.from && sl.from >= ts));
+        c.schedule.forEach(sl => { if(!sl.to || sl.to > dayBefore) sl.to = dayBefore; });
+      });
+    } else state.classes.forEach(c => { c.schedule = []; });
+    const mk = o => ts ? Object.assign(o, { from: ts }) : o;
     let flexCls = null;
     if(b.flexAfter){
       flexCls = state.classes.find(c => c.name === 'Flex / Advisory');
@@ -2788,14 +2804,14 @@
       const cid = blk.flex ? (flexCls && flexCls.id) : ((b.grid[ci] || [])[ri]);
       const c = cid ? getClass(cid) : null;
       if(!c) return;
-      if(rot) c.schedule.push({ id:uid(), day:col, start:blk.start, end:blk.end });
+      if(rot) c.schedule.push(mk({ id:uid(), day:col, start:blk.start, end:blk.end }));
       else (b.type === 'weekdays' ? [ci + 1] : days).forEach(d => {
         const shift = (b.lateDay && d === b.lateDay) ? (toMin(b.lateStart) - toMin(b.dayStart)) : 0;
-        c.schedule.push({ id:uid(), day:d, start: shift ? addMinutesToTime(blk.start, shift) : blk.start, end: shift ? addMinutesToTime(blk.end, shift) : blk.end });
+        c.schedule.push(mk({ id:uid(), day:d, start: shift ? addMinutesToTime(blk.start, shift) : blk.start, end: shift ? addMinutesToTime(blk.end, shift) : blk.end }));
       });
     }));
     state.settings.scheduleMode = rot ? 'ab' : 'weekday';
-    if(rot){ state.settings.cycle = cols.slice(); state.settings.abAnchor = { date: b.start, letter: b.type === 'ab' ? b.firstLabel : cols[0] }; }
+    if(rot && !(ts && state.settings.abAnchor && prevMode === 'ab')){ state.settings.cycle = cols.slice(); state.settings.abAnchor = { date: b.start, letter: b.type === 'ab' ? b.firstLabel : cols[0] }; }
     state.settings.schoolYear = { start: b.start, end: b.end };
     state.settings.noSchool = parseNoSchool(b.noSchool);
     logActivity('add', 'Built a ' + (SB_TYPES.find(t => t.id === b.type) || {}).name + ' schedule');
