@@ -2830,6 +2830,7 @@
     '  "scheduleType": "standard" | "ab" | "rotating",',
     '  "rotationLength": 6,',
     '  "schoolYear": { "start": "YYYY-MM-DD", "end": "YYYY-MM-DD" },',
+    '  "termStart": "YYYY-MM-DD (only if this class schedule is for a semester/trimester that starts after the first day of school; otherwise leave this line out)",',
     '  "noSchool": ["YYYY-MM-DD", "YYYY-MM-DD to YYYY-MM-DD"],',
     '  "periods": [ { "kind": "class", "label": "Period 1", "start": "08:00", "end": "08:50" } ],',
     '  "classes": [',
@@ -2887,11 +2888,26 @@
       if(inner) o = inner;
     }
     const issues = [];
+    { // tolerate different key spellings (schedule_type, School Year, ...) and a missing scheduleType
+      const canon = { scheduletype:'scheduleType', type:'scheduleType', scheduletypename:'scheduleType', rotationlength:'rotationLength', schoolyear:'schoolYear', noschool:'noSchool', noschooldates:'noSchool', periods:'periods', bellschedule:'periods', classes:'classes', courses:'classes', specialschedules:'specialSchedules' };
+      Object.keys(o).forEach(k => { const c = canon[k.toLowerCase().replace(/[^a-z]/g, '')]; if(c && o[c] === undefined) o[c] = o[k]; });
+      if(o.scheduleType == null || String(o.scheduleType).trim() === ''){
+        const days = []; arr(o.classes).forEach(c => arr(c && c.slots).forEach(sl => days.push(String(sl && sl.day != null ? sl.day : '').trim())));
+        if(days.some(d => /\b[AB]\b/i.test(d) && !/^(every|mon|tue|wed|thu|fri)/i.test(d))) o.scheduleType = 'ab';
+        else if(days.some(d => /^(day\s*)?\d+$/i.test(d))) o.scheduleType = 'rotating';
+        else o.scheduleType = 'standard';
+      }
+    }
     const stRaw = String(o.scheduleType == null ? '' : o.scheduleType).trim().toLowerCase();
-    const type = /^(ab|a\/b|a-b|a & b|a and b|alternating|ab block|a\/b block)$/.test(stRaw) ? 'ab'
+    let type = /^(ab|a\/b|a-b|a & b|a and b|alternating|ab block|a\/b block)$/.test(stRaw) ? 'ab'
       : /(rotat|cycle|day 1|numbered)/.test(stRaw) ? 'rotating'
       : /(standard|traditional|period|every|same|daily|regular)/.test(stRaw) ? 'standard' : '';
-    if(!type) return { error:'The reply needs a scheduleType of standard, ab or rotating' + (stRaw ? ' (it said “' + stRaw.slice(0, 30) + '”).' : '.') };
+    if(stRaw.indexOf('|') >= 0) type = '';
+    if(!type){
+      const days = []; arr(o.classes).forEach(c => arr(c && c.slots).forEach(sl => days.push(String(sl && sl.day != null ? sl.day : '').trim())));
+      type = days.some(d => /\b[AB]\b/i.test(d) && !/^(every|mon|tue|wed|thu|fri)/i.test(d)) ? 'ab' : (days.some(d => /^(day\s*)?\d+$/i.test(d)) ? 'rotating' : 'standard');
+      issues.push('The schedule type “' + stRaw.slice(0, 30) + '” wasn’t recognised, so it was guessed from the days (' + type + '). Check it in the next step.');
+    }
 
     const WD = { mon:1, tue:2, wed:3, thu:4, fri:5 };
     const wdOf = d => WD[String(d == null ? '' : d).trim().slice(0, 3).toLowerCase()] || 0;
@@ -2978,11 +2994,14 @@
     const sy = (o.schoolYear && typeof o.schoolYear === 'object') ? o.schoolYear : {};
     const start = parseISO(sy.start) ? sy.start : '', end = parseISO(sy.end) ? sy.end : '';
     if(!start || !end) issues.push('School year dates weren’t found. You’ll enter them next.');
+    const tsIn = String(o.termStart || '').trim();
+    const termStart = parseISO(tsIn) && (!start || tsIn >= start) && (!end || tsIn <= end) ? tsIn : '';
+    if(tsIn && !termStart) issues.push('The term start date “' + tsIn.slice(0, 20) + '” wasn’t usable and was ignored.');
     const nsIn = arr(o.noSchool).map(x => String(x));
     const ns = parseNoSchool(nsIn.join('\n'));
     if(nsIn.length > ns.length) issues.push((nsIn.length - ns.length) + ' no-school date(s) weren’t understood and were skipped.');
     const noSchoolText = ns.map(r => r.start === r.end ? r.start : r.start + ' to ' + r.end).join('\n');
-    return { type: eff, cols, rows: kept, classRowIdx, lunch, flex, classes, specials, start, end, noSchoolText, issues };
+    return { type: eff, cols, rows: kept, classRowIdx, lunch, flex, classes, specials, start, end, termStart, noSchoolText, issues };
   }
 
   function openAiImport(prefill, errMsg){
@@ -3061,7 +3080,7 @@
     Object.assign(bld, {
       type: res.type, dayStart: first.start, len, pass: clampN(gap >= 0 ? gap : 5, 0, 30), periods: res.classRowIdx.length,
       lunchAfter: res.lunch ? res.lunch.after : 0, lunchLen: res.lunch ? clampN(res.lunch.len, 10, 90) : 30, lateDay: 0,
-      start: res.start || bld.start, end: res.end || bld.end, noSchool: res.noSchoolText
+      start: res.start || bld.start, end: res.end || bld.end, noSchool: res.noSchoolText, termStart: res.termStart || ''
     });
     bld.flexAfter = res.flex ? res.flex.after : 0;
     if(res.flex) bld.flexLen = clampN(res.flex.len, 10, 120);
