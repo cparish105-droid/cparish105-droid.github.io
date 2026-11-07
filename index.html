@@ -2799,8 +2799,9 @@
     const mk = o => ts ? Object.assign(o, { from: ts }) : o;
     let flexCls = null;
     if(b.flexAfter){
-      flexCls = state.classes.find(c => c.name === 'Flex / Advisory');
-      if(!flexCls){ flexCls = { id:uid(), name:'Flex / Advisory', teacher:'', room:'', color:'#7A5C7E', schedule:[], notes:'', created:Date.now() }; state.classes.push(flexCls); }
+      const fname = b.flexName || 'Flex / Advisory';
+      flexCls = state.classes.find(c => c.name === fname);
+      if(!flexCls){ flexCls = { id:uid(), name:fname, teacher:'', room:'', color:'#7A5C7E', schedule:[], notes:'', created:Date.now() }; state.classes.push(flexCls); }
     }
     const days = [1,2,3,4,5].filter(d => !(b.type === 'fourday' && d === b.dayOff));
     blocks.forEach((blk, ri) => cols.forEach((col, ci) => {
@@ -2829,6 +2830,21 @@
   /* =========================================================
      IMPORT FROM AN AI CHAT (paste JSON) -> feeds the builder
      ========================================================= */
+  const AI_BELL_PROMPT = [
+    'Look at the attached screenshot of my school\u2019s bell schedule (the times each period starts and ends).',
+    'Reply with ONLY one JSON object in a code block, no other text, in exactly this shape:',
+    '{',
+    '  "periods": [',
+    '    { "kind": "class", "label": "Period 1", "start": "08:00", "end": "08:50" },',
+    '    { "kind": "lunch", "label": "Lunch", "start": "11:40", "end": "12:10" }',
+    '  ]',
+    '}',
+    'Rules:',
+    '- Use the regular full-day schedule only (ignore late-start, early-release or assembly versions).',
+    '- Include EVERY row in time order: normal periods (kind \"class\"), lunch (kind \"lunch\"), and advisory / flex / WIN / study hall (kind \"flex\").',
+    '- label must be the period name or number exactly as the school prints it (for example \"Period 19\" or \"Block 3\").',
+    '- Times are 24-hour HH:MM.'
+  ].join('\n');
   const AI_IMPORT_PROMPT = [
     'I\'m attaching screenshot(s) of my school class schedule and/or school calendar. Read them carefully and reply with ONLY one JSON object (no explanation, no markdown) in exactly this format:',
     '',
@@ -2896,8 +2912,7 @@
   function numOf0(t){ const m = String(t == null ? '' : t).match(/\d+/); return m ? Number(m[0]) : NaN; }
   function aiToMin(t){ const p = String(t || '0:0').split(':').map(Number); return p[0] * 60 + p[1]; }
 
-  function aiParseImport(raw){
-    const arr = x => Array.isArray(x) ? x : [];
+  function aiExtractObject(raw){
     const txt = String(raw || '')
       .replace(/&#x([0-9a-f]+);/gi, (m, h) => String.fromCharCode(parseInt(h, 16)))
       .replace(/&#(\d+);/g, (m, d) => String.fromCharCode(Number(d)))
@@ -2927,6 +2942,21 @@
     }
     if(o === undefined && fallback) o = fallback;
     if(o === undefined) return { error:'That reply isn’t valid JSON (' + (firstErr || 'unknown problem') + '). Ask the AI to reply with only the JSON, and make sure you copied all of it.' };
+    return { o: o };
+  }
+
+  function aiParseImport(raw, bellRaw){
+    const arr = x => Array.isArray(x) ? x : [];
+    const ex = aiExtractObject(raw);
+    if(ex.error) return ex;
+    let o = ex.o;
+    if(bellRaw && String(bellRaw).trim()){
+      const bx = aiExtractObject(bellRaw);
+      if(bx.error) return { error:'Bell schedule reply: ' + bx.error };
+      const bp = aiFindPeriods(bx.o);
+      if(!bp.length) return { error:'Bell schedule reply: no period times were found. Ask the AI for a "periods" list with start and end times.' };
+      o.periods = bp;
+    }
     if(!o || typeof o !== 'object') return { error:'That reply isn’t in the expected format.' };
     if(o.scheduleType === undefined && !Array.isArray(o)){
       const inner = Object.keys(o).map(k => o[k]).find(v => v && typeof v === 'object' && !Array.isArray(v) && v.scheduleType !== undefined);
@@ -3020,14 +3050,14 @@
       if(k < 0 && ((flex && sameRow(flex.row, rs)) || (lunch && sameRow(lunch.row, rs)))) return -2;
       return k;
     };
-    const classes = []; let everyNote = false;
+    const classes = []; let everyNote = false, flexName = '';
     arr(o.classes).slice(0, 30).forEach(c => {
       const name = String((c && c.name) || '').trim().slice(0, 80);
       if(!name) return;
       const cls = { name, teacher: String(c.teacher || '').trim().slice(0, 60), room: String(c.room || '').trim().slice(0, 20), slots: [] };
       arr(c.slots).forEach(s => {
         const pk = resolvePeriod(s && s.period);
-        if(pk === -2) return;
+        if(pk === -2){ if(!flexName && flex && sameRow(flex.row, s && s.period)) flexName = name; return; }
         if(pk < 0){ issues.push(name + ': skipped a slot with an unknown period (' + String(s && s.period).slice(0, 12) + ').'); return; }
         let d = String(s && s.day != null ? s.day : '').trim();
         let cis;
@@ -3069,13 +3099,13 @@
     const ns = parseNoSchool(nsIn.join('\n'));
     if(nsIn.length > ns.length) issues.push((nsIn.length - ns.length) + ' no-school date(s) weren’t understood and were skipped.');
     const noSchoolText = ns.map(r => r.start === r.end ? r.start : r.start + ' to ' + r.end).join('\n');
-    return { type: eff, cols, rows: kept, classRowIdx, lunch, flex, classes, specials, start, end, termStart, noSchoolText, issues };
+    return { type: eff, cols, rows: kept, classRowIdx, lunch, flex, classes, specials, start, end, termStart, noSchoolText, issues, flexName };
   }
 
-  function openAiImport(prefill, errMsg){
+  function openAiImport(prefill, errMsg, bellPrefill){
     openModal({
       title:'Import from an AI chat', large:true,
-      bodyHtml:`<p class="view-sub">Free, and no extra account needed. <span style="opacity:.6">(importer v5)</span></p>
+      bodyHtml:`<p class="view-sub">Free, and no extra account needed. <span style="opacity:.6">(importer v6)</span></p>
         <ol style="margin:0 0 14px 18px;padding:0;font-size:13.5px;line-height:1.7;">
           <li>Tap <strong>Copy prompt</strong>.</li>
           <li>Open any free AI chat (Claude, ChatGPT, Gemini), attach screenshots of your class schedule and school calendar, and paste the prompt.</li>
@@ -3085,29 +3115,40 @@
         <details style="margin-top:8px;"><summary class="settings-row-hint" style="cursor:pointer;">Show the prompt</summary>
           <div class="field" style="margin-top:6px;"><textarea readonly id="aiPromptBox" style="min-height:140px;">${escapeHtml(AI_IMPORT_PROMPT)}</textarea></div></details>
         <div class="field" style="margin-top:14px;"><label for="aiPaste">The AI&rsquo;s reply</label><textarea id="aiPaste" style="min-height:150px;" placeholder="Paste here">${escapeHtml(prefill || '')}</textarea></div>
+        <details style="margin-top:8px;" ${bellPrefill ? 'open' : ''}><summary class="settings-row-hint" style="cursor:pointer;">Optional: add your bell schedule (period times) from a separate screenshot</summary>
+          <p class="settings-row-hint" style="margin:8px 0;">Use this when the first reply has wrong or missing period times. Tap the button, give the AI a screenshot of your bell schedule with that prompt, and paste its reply here.</p>
+          <button class="btn-secondary btn-sm" type="button" id="aiBellCopy">Copy bell schedule prompt</button>
+          <div class="field" style="margin-top:8px;"><textarea id="aiBellPaste" style="min-height:110px;" placeholder="Paste the bell schedule reply here">${escapeHtml(bellPrefill || '')}</textarea></div></details>
         <p class="login-note" id="aiNote">${escapeHtml(errMsg || '')}</p>`,
       footerHtml:`<button class="btn-ghost" id="aiBack">Back</button><div class="modal-footer-right"><button class="btn-primary" style="width:auto;" id="aiCheck">Check it</button></div>`,
       onMount(){
         byId('aiBack').addEventListener('click', () => renderBuilder());
-        byId('aiCopy').addEventListener('click', async () => {
+        const copyPrompt = async (text, boxId) => {
           let ok = false;
-          try{ await navigator.clipboard.writeText(AI_IMPORT_PROMPT); ok = true; }
+          try{ await navigator.clipboard.writeText(text); ok = true; }
           catch(e){
-            try{ const box = byId('aiPromptBox'); box.select(); ok = document.execCommand('copy'); }catch(e2){}
+            try{ const box = byId(boxId); box.select(); ok = document.execCommand('copy'); }catch(e2){}
           }
           toast(ok ? 'Prompt copied' : 'Couldn’t copy automatically — open “Show the prompt” and copy it', ok ? 'success' : 'error');
+        };
+        byId('aiCopy').addEventListener('click', () => copyPrompt(AI_IMPORT_PROMPT, 'aiPromptBox'));
+        byId('aiBellCopy').addEventListener('click', async () => {
+          let ok = false;
+          try{ await navigator.clipboard.writeText(AI_BELL_PROMPT); ok = true; }catch(e){}
+          if(!ok){ const ta = byId('aiBellPaste'); const prev = ta.value; ta.value = AI_BELL_PROMPT; ta.select(); try{ ok = document.execCommand('copy'); }catch(e2){} ta.value = prev; }
+          toast(ok ? 'Bell schedule prompt copied' : 'Couldn’t copy automatically', ok ? 'success' : 'error');
         });
         byId('aiCheck').addEventListener('click', () => {
-          const raw = byId('aiPaste').value;
-          const res = aiParseImport(raw);
+          const raw = byId('aiPaste').value, bellRaw = byId('aiBellPaste').value;
+          const res = aiParseImport(raw, bellRaw);
           if(res.error){ byId('aiNote').textContent = res.error; return; }
-          openAiReview(res, raw);
+          openAiReview(res, raw, bellRaw);
         });
       }
     });
   }
 
-  function openAiReview(res, raw){
+  function openAiReview(res, raw, bellRaw){
     const typeName = { standard:'Standard periods', ab:'A/B block', rotating:'Rotating days', weekdays:'Different each weekday' }[res.type];
     const kindTag = r => r.kind === 'lunch' ? ' <span class="day-tag">lunch</span>' : (r.kind === 'flex' ? ' <span class="day-tag">flex</span>' : '');
     let n = 0;
@@ -3123,7 +3164,7 @@
         <p class="settings-row-hint" style="margin-top:12px;">Next you&rsquo;ll see the builder&rsquo;s grid and can fix anything. Classes${res.specials.length ? ' and special days' : ''} are added now, but your weekly schedule only changes when you press Generate.</p>`,
       footerHtml:`<button class="btn-ghost" id="aiRevBack">Back</button><div class="modal-footer-right"><button class="btn-primary" style="width:auto;" id="aiRevGo">Looks right &mdash; continue</button></div>`,
       onMount(){
-        byId('aiRevBack').addEventListener('click', () => openAiImport(raw));
+        byId('aiRevBack').addEventListener('click', () => openAiImport(raw, '', bellRaw));
         byId('aiRevGo').addEventListener('click', () => aiApplyImport(res));
       }
     });
@@ -3148,7 +3189,7 @@
     Object.assign(bld, {
       type: res.type, dayStart: first.start, len, pass: clampN(gap >= 0 ? gap : 5, 0, 30), periods: res.classRowIdx.length,
       lunchAfter: res.lunch ? res.lunch.after : 0, lunchLen: res.lunch ? clampN(res.lunch.len, 10, 90) : 30, lateDay: 0,
-      start: res.start || bld.start, end: res.end || bld.end, noSchool: res.noSchoolText, termStart: res.termStart || ''
+      start: res.start || bld.start, end: res.end || bld.end, noSchool: res.noSchoolText, termStart: res.termStart || '', flexName: res.flexName || ''
     });
     bld.flexAfter = res.flex ? res.flex.after : 0;
     if(res.flex) bld.flexLen = clampN(res.flex.len, 10, 120);
