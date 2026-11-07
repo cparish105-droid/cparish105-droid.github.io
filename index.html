@@ -24,11 +24,11 @@
     --paper-line: rgba(107,111,102,0.09);
     --card-bg: rgba(255,255,255,0.55);
     --card-border: rgba(30,36,33,0.09);
-    --shadow: 0 1px 2px rgba(30,36,33,0.05), 0 6px 18px rgba(30,36,33,0.06);
+    --shadow: 0 1px 2px rgba(30,36,33,0.04);
     --high: #B4483A;
     --med: #B08A3E;
     --low: #52697A;
-    --radius: 8px;
+    --radius: 6px;
     --radius-sm: 4px;
   }
 
@@ -68,9 +68,7 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  body{
-    background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 31px, var(--paper-line) 31px, var(--paper-line) 32px);
-  }
+  body{ background-image:none; }
 
   h1,h2,h3,.serif{ font-family: 'Fraunces', serif; }
   .mono{ font-family: 'IBM Plex Mono', monospace; }
@@ -92,7 +90,7 @@
 
   /* ---------- LOGIN ---------- */
   #view-login{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
-  .login-box{ width:100%; max-width:380px; text-align:center; animation: fadeSlideUp .4s ease; }
+  .login-box{ width:100%; max-width:420px; text-align:center; animation: fadeSlideUp .4s ease; }
   .wordmark{ font-size:44px; font-weight:600; letter-spacing:-0.01em; margin:0 0 6px 0; }
   .tagline{ font-style:italic; color:var(--muted); margin:0 0 36px 0; font-size:15px; }
   .field-label{ display:block; text-align:left; font-size:13px; color:var(--muted); margin-bottom:6px; }
@@ -107,6 +105,11 @@
   .btn-primary:active{ transform: scale(.98); }
   :root[data-theme="dark"] .btn-primary{ background:var(--accent); color:var(--accent-ink); }
   :root[data-theme="dark"] .btn-primary:hover{ background:#5CAB93; }
+  .landing-sub{ font-size:16px; line-height:1.55; margin:0 0 18px 0; color:var(--ink); }
+  .landing-points{ list-style:none; padding:0; margin:0 0 26px 0; text-align:left; font-size:14px; color:var(--muted); }
+  .landing-points li{ padding:8px 0 8px 22px; position:relative; border-bottom:1px solid var(--line); }
+  .landing-points li::before{ content:''; position:absolute; left:4px; top:15px; width:8px; height:8px; border-radius:50%; background:var(--accent); }
+  .login-demo .btn-link + .btn-link{ margin-left:14px; }
   .login-note{ margin-top:16px; font-size:12.5px; color:var(--muted); min-height:16px; }
   .login-demo{ margin-top:10px; }
   .btn-link{ background:none; border:none; color:var(--muted); text-decoration:underline; cursor:pointer; font-size:13px; padding:4px; }
@@ -170,11 +173,11 @@
   /* dashboard grid */
   .grid-2{ display:grid; grid-template-columns:1.3fr 1fr; gap:18px; }
   .grid-stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:22px; }
-  .stat-card{ background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius); padding:14px 16px; box-shadow:var(--shadow); }
+  .stat-card{ background:var(--paper); border:1px solid var(--card-border); border-radius:var(--radius); padding:14px 16px; box-shadow:var(--shadow); }
   .stat-num{ font-family:'Fraunces',serif; font-size:26px; font-weight:600; line-height:1; }
   .stat-label{ color:var(--muted); font-size:12px; margin-top:4px; }
 
-  .card{ background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius); padding:18px 20px; box-shadow:var(--shadow); margin-bottom:18px; }
+  .card{ background:var(--paper); border:1px solid var(--card-border); border-radius:var(--radius); padding:18px 20px; box-shadow:var(--shadow); margin-bottom:18px; }
   .card-title{ font-family:'Fraunces',serif; font-size:16px; font-weight:600; margin:0 0 12px 0; display:flex; align-items:center; justify-content:space-between; gap:10px; }
   .card-title small{ font-family:'IBM Plex Sans',sans-serif; font-weight:400; color:var(--muted); font-size:12px; }
 
@@ -217,6 +220,7 @@
   .btn-add{ background:var(--accent); color:var(--accent-ink); border:none; padding:8px 18px; border-radius:var(--radius-sm); cursor:pointer; white-space:nowrap; }
   .btn-add:hover{ filter:brightness(1.08); }
 
+  .quick-preview{ font-size:12.5px; color:var(--muted); min-height:18px; margin:-14px 0 16px 0; }
   .toolbar{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:18px; }
   .toolbar select, .toolbar input[type="text"]{
     background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius-sm); padding:7px 10px; outline:none;
@@ -314,30 +318,22 @@
   .cal-view-toggle{ margin-left:auto; }
   .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:var(--radius-sm); overflow:hidden; }
   .cal-dow{ background:var(--paper); text-align:center; font-size:11px; color:var(--muted); padding:6px 0; }
-  .cal-cell{ background:var(--paper); min-height:92px; padding:6px; font-size:12px; cursor:pointer; position:relative; transition: background .1s ease; }
+  .cal-cell{ background:var(--paper); min-height:130px; padding:6px; font-size:12px; cursor:pointer; position:relative; transition: background .1s ease; }
   .cal-cell:hover{ background: var(--accent-soft); }
   .cal-cell.other-month{ background: var(--bg); color:var(--faint); }
   .cal-cell.today{ outline:2px solid var(--accent); outline-offset:-2px; }
   .cal-daynum{ font-weight:600; margin-bottom:4px; }
-  .cal-event{ font-size:10.5px; padding:1px 5px; border-radius:3px; margin-bottom:2px; background:var(--accent-soft); color:var(--accent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
+  .cal-event{ font-size:11.5px; line-height:1.3; padding:3px 6px; border-radius:3px; margin-bottom:3px; background:var(--accent-soft); color:var(--accent); word-break:break-word; cursor:pointer; }
   .cal-event.overdue-ev{ background:var(--overdue-bg); color:var(--overdue); }
   .cal-event.exam-ev{ background:var(--high); color:#fff; }
   .cal-more{ font-size:10px; color:var(--muted); }
-  .cal-week-row .cal-cell{ min-height:160px; }
+  .cal-week-row .cal-cell{ min-height:320px; }
+  .cal-scroll{ max-height:calc(100vh - 230px); overflow:auto; border-radius:var(--radius-sm); }
+  .cal-scroll .cal-grid{ min-width:700px; }
+  .cal-dow{ position:sticky; top:0; z-index:2; }
   .cal-day-list{ display:flex; flex-direction:column; gap:8px; }
 
   /* Planner */
-  .planner-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:10px; }
-  .planner-day{ background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius); padding:10px; min-height:220px; display:flex; flex-direction:column; gap:6px; }
-  .planner-day.today-col{ outline:2px solid var(--accent); outline-offset:-2px; }
-  .planner-day-head{ font-weight:600; font-size:13px; display:flex; justify-content:space-between; align-items:center; margin-bottom:2px; }
-  .planner-day-date{ color:var(--muted); font-weight:400; font-size:11.5px; }
-  .planner-item{ background:var(--paper); border:1px solid var(--card-border); border-left:3px solid var(--accent); border-radius:4px; padding:5px 7px; font-size:11.5px; cursor:pointer; }
-  .planner-item.exam-item{ border-left-color:var(--high); }
-  .planner-item.study-item{ border-left-color:var(--low); }
-  .planner-item-time{ color:var(--muted); font-size:10.5px; }
-  .planner-add{ margin-top:auto; background:none; border:1px dashed var(--card-border); border-radius:4px; color:var(--muted); font-size:11.5px; padding:5px; cursor:pointer; }
-  .planner-add:hover{ border-color:var(--accent); color:var(--accent); }
 
   /* classes */
   .class-card{ background:var(--card-bg); border:1px solid var(--card-border); border-left:4px solid var(--accent); border-radius:var(--radius); padding:16px 18px; margin-bottom:14px; cursor:pointer; box-shadow:var(--shadow); }
@@ -440,7 +436,6 @@
   @media (max-width: 880px){
     .grid-2{ grid-template-columns:1fr; }
     .grid-stats{ grid-template-columns:repeat(2,1fr); }
-    .planner-grid{ grid-template-columns:repeat(1,1fr); }
   }
   @media (max-width: 760px){
     .mobile-only{ display:inline-flex; }
@@ -453,7 +448,7 @@
     .field-row, .field-row3{ grid-template-columns:1fr; }
     .modal{ max-width:100%; width:100%; max-height:100%; height:100%; border-radius:0; }
     .modal-overlay{ padding:0; align-items:stretch; }
-    .cal-cell{ min-height:60px; font-size:10.5px; }
+    .cal-cell{ min-height:100px; font-size:11px; }
     .cal-daynum{ font-size:11px; }
   }
 </style>
@@ -464,7 +459,7 @@
   <div id="view-login">
     <div class="login-box">
       <h1 class="wordmark">Docket</h1>
-      <p class="tagline">everything that's due, in one ruled page</p>
+      <p class="tagline" id="loginTagline">Your one stop for everything school.</p>
       <div id="loginBody"></div>
     </div>
   </div>
@@ -481,10 +476,8 @@
         <button class="nav-item" data-view="today"><span class="nav-ic">&#9737;</span> Today</button>
         <button class="nav-item" data-view="assignments"><span class="nav-ic">&#9776;</span> Assignments</button>
         <button class="nav-item" data-view="calendar"><span class="nav-ic">&#9633;</span> Calendar</button>
-        <button class="nav-item" data-view="planner"><span class="nav-ic">&#9782;</span> Weekly Planner</button>
         <button class="nav-item" data-view="classes"><span class="nav-ic">&#9998;</span> Classes</button>
         <button class="nav-item" data-view="exams"><span class="nav-ic">&#9888;</span> Exams</button>
-        <button class="nav-item" data-view="notes"><span class="nav-ic">&#9997;</span> Notes</button>
         <button class="nav-item" data-view="stats"><span class="nav-ic">&#9713;</span> Insights</button>
         <button class="nav-item" data-view="settings"><span class="nav-ic">&#9881;</span> Settings</button>
       </nav>
@@ -497,7 +490,7 @@
       <header class="topbar">
         <button class="btn-icon mobile-only" id="menuBtn" aria-label="Open menu">&#9776;</button>
         <button class="search-trigger" id="searchBtn">
-          <span>&#128269; Search assignments, classes, notes&hellip;</span>
+          <span>&#128269; Search assignments, classes, exams&hellip;</span>
           <span class="kbd">&#8984;K</span>
         </button>
         <div class="topbar-right">
@@ -512,10 +505,8 @@
         <section id="view-today" class="view hidden"></section>
         <section id="view-assignments" class="view hidden"></section>
         <section id="view-calendar" class="view hidden"></section>
-        <section id="view-planner" class="view hidden"></section>
         <section id="view-classes" class="view hidden"></section>
         <section id="view-exams" class="view hidden"></section>
-        <section id="view-notes" class="view hidden"></section>
         <section id="view-stats" class="view hidden"></section>
         <section id="view-settings" class="view hidden"></section>
       </main>
@@ -783,6 +774,12 @@
     }
   }
 
+  function stateForCloud(){
+    const c = JSON.parse(JSON.stringify(state));
+    if(c.settings && c.settings.canvas) c.settings.canvas.token = '';
+    return c;
+  }
+
   function logActivity(type, text){
     state.activity.unshift({ id: uid(), type, text, ts: Date.now() });
     if(state.activity.length > 60) state.activity.length = 60;
@@ -883,6 +880,7 @@
 
   /* ---------- generic modal ---------- */
   function openModal({ title, bodyHtml, footerHtml, onMount, large, small }){
+    ui.onModalClose = null;
     const overlay = byId('modalOverlay');
     const shell = byId('modalShell');
     byId('modalTitle').textContent = title || '';
@@ -897,9 +895,11 @@
     setTimeout(() => { if(focusable) focusable.focus(); }, 30);
   }
   function closeModal(){
+    const _cb = ui.onModalClose; ui.onModalClose = null;
     byId('modalOverlay').classList.add('hidden');
     document.body.style.overflow = '';
     if(ui.timer) stopTimer(true);
+    if(_cb) _cb();
   }
   byId('modalOverlay').addEventListener('click', (e) => { if(e.target === byId('modalOverlay')) closeModal(); });
   byId('modalCloseBtn').addEventListener('click', closeModal);
@@ -920,31 +920,19 @@
 
   function setLoginNote(msg){ const n = byId('loginNote'); if(n) n.textContent = msg || '\u00A0'; }
 
-  function renderLoginMode(){
+  function renderLoginMode(mode){
+    mode = mode || 'landing';
     const box = byId('loginBody');
-    if(sb){
-      box.innerHTML = `
-        <label class="field-label" for="authEmail">Email</label>
-        <input type="email" id="authEmail" class="login-input" placeholder="you@example.com" autocomplete="email">
-        <label class="field-label" for="authPassword">Password</label>
-        <input type="password" id="authPassword" class="login-input" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="current-password">
-        <button class="btn-primary" id="authSignInBtn">Sign in</button>
-        <button class="login-alt-btn" id="authSignUpBtn">Create account</button>
-        <p class="login-note" id="loginNote">&nbsp;</p>
-        <div class="login-demo"><button class="btn-link" id="demoBtn">or try it with local demo data</button></div>
-      `;
-      byId('authSignInBtn').addEventListener('click', doSignIn);
-      byId('authSignUpBtn').addEventListener('click', doSignUp);
-      byId('authPassword').addEventListener('keydown', (e) => { if(e.key==='Enter') doSignIn(); });
-      byId('demoBtn').addEventListener('click', () => openLocalDocket('Demo Student', true));
-    } else {
+    const tag = byId('loginTagline');
+    tag.textContent = 'Your one stop for everything school.';
+    if(!sb){
       box.innerHTML = `
         <label class="field-label" for="nameInput">Your name</label>
         <input type="text" id="nameInput" placeholder="e.g. Colin" autocomplete="off">
         <button class="btn-primary" id="openBtn">Open my docket</button>
         <p class="login-note" id="loginNote">&nbsp;</p>
         <div class="login-demo"><button class="btn-link" id="demoBtn">or try it with demo data</button></div>
-        <p class="settings-row-hint" style="margin-top:18px;">Cloud sync isn't configured for this copy — everything stays in this browser. See the SUPABASE CONFIG comment near the top of the file to turn on account sync.</p>
+        <p class="settings-row-hint" style="margin-top:18px;">Cloud sync isn't configured for this copy \u2014 everything stays in this browser. See the SUPABASE CONFIG comment near the top of the file to turn on account sync.</p>
       `;
       const nameInput = byId('nameInput');
       const r = Store.get(lastUserKey());
@@ -956,7 +944,186 @@
         nameInput.value = n;
         openLocalDocket(n, true);
       });
+      return;
     }
+    if(mode === 'landing'){
+      box.innerHTML = `
+        <p class="landing-sub">Assignments, tests and your class schedule in one clean place. Add a task in seconds, even between classes.</p>
+        <ul class="landing-points">
+          <li>Type &ldquo;bio test thursday&rdquo; and it lands on your calendar</li>
+          <li>See what&rsquo;s due and what to do next</li>
+          <li>Synced across your phone and laptop</li>
+        </ul>
+        <button class="btn-primary" id="goSignUp">Get started &mdash; it&rsquo;s free</button>
+        <button class="login-alt-btn" id="goLogIn">Log in</button>
+        <div class="login-demo"><button class="btn-link" id="demoBtn">or look around with demo data</button></div>
+      `;
+      byId('goSignUp').addEventListener('click', () => renderLoginMode('signup'));
+      byId('goLogIn').addEventListener('click', () => renderLoginMode('login'));
+      byId('demoBtn').addEventListener('click', () => openLocalDocket('Demo Student', true));
+      return;
+    }
+    const isSignUp = mode === 'signup';
+    tag.textContent = isSignUp ? 'Create your free account' : 'Welcome back';
+    box.innerHTML = `
+      <label class="field-label" for="authEmail">Email</label>
+      <input type="email" id="authEmail" class="login-input" placeholder="you@example.com" autocomplete="email">
+      <label class="field-label" for="authPassword">Password</label>
+      <input type="password" id="authPassword" class="login-input" placeholder="${isSignUp ? 'At least 6 characters' : 'Your password'}" autocomplete="${isSignUp ? 'new-password' : 'current-password'}">
+      <button class="btn-primary" id="authMainBtn">${isSignUp ? 'Create account' : 'Log in'}</button>
+      ${isSignUp ? '' : '<button class="login-alt-btn" id="authMagicBtn">Email me a sign-in link instead</button>'}
+      <button class="login-alt-btn" id="authGoogleBtn">Continue with Google</button>
+      <p class="login-note" id="loginNote">&nbsp;</p>
+      <div class="login-demo">
+        ${isSignUp ? '' : '<button class="btn-link" id="authForgotBtn">Forgot password?</button>'}
+        <button class="btn-link" id="authSwitchBtn">${isSignUp ? 'Already have an account? Log in' : 'New here? Create an account'}</button>
+        <button class="btn-link" id="authBackBtn">Back</button>
+      </div>
+    `;
+    byId('authMainBtn').addEventListener('click', isSignUp ? doSignUp : doSignIn);
+    byId('authPassword').addEventListener('keydown', (e) => { if(e.key === 'Enter') (isSignUp ? doSignUp : doSignIn)(); });
+    if(!isSignUp){ byId('authMagicBtn').addEventListener('click', doMagicLink); byId('authForgotBtn').addEventListener('click', doForgotPassword); }
+    byId('authGoogleBtn').addEventListener('click', doGoogle);
+    byId('authSwitchBtn').addEventListener('click', () => renderLoginMode(isSignUp ? 'login' : 'signup'));
+    byId('authBackBtn').addEventListener('click', () => renderLoginMode('landing'));
+    byId('authEmail').focus();
+  }
+
+  function pageUrl(){ return window.location.href.split('#')[0].split('?')[0]; }
+
+  async function doGoogle(){
+    try{
+      const { error } = await sb.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: pageUrl() } });
+      if(error) setLoginNote(error.message);
+    }catch(e){ setLoginNote('Could not reach the server. Check your connection.'); }
+  }
+
+  async function doForgotPassword(){
+    const email = (byId('authEmail').value||'').trim();
+    if(!email){ setLoginNote('Enter your email first, then tap Forgot password.'); return; }
+    setLoginNote('Sending reset link…');
+    try{
+      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: pageUrl() });
+      setLoginNote(error ? error.message : 'Check your email for a password reset link.');
+    }catch(e){ setLoginNote('Could not reach the server. Check your connection.'); }
+  }
+
+  function openNewPasswordModal(){
+    openModal({
+      title:'Set a new password', small:true,
+      bodyHtml:`<div class="field"><label for="npPass">New password</label><input type="password" id="npPass" autocomplete="new-password" placeholder="At least 6 characters"></div><p class="login-note" id="npNote"></p>`,
+      footerHtml:`<button class="btn-ghost" id="npCancel">Cancel</button><div class="modal-footer-right"><button class="btn-primary" style="width:auto;" id="npSave">Save password</button></div>`,
+      onMount(){
+        byId('npCancel').addEventListener('click', closeModal);
+        byId('npSave').addEventListener('click', async () => {
+          const pw = byId('npPass').value;
+          if(pw.length < 6){ byId('npNote').textContent = 'Use at least 6 characters.'; return; }
+          const { error } = await sb.auth.updateUser({ password: pw });
+          if(error){ byId('npNote').textContent = error.message; return; }
+          closeModal(); toast('Password updated', 'success');
+        });
+      }
+    });
+  }
+
+  /* ---------- two-step verification (TOTP) ---------- */
+  function promptMfa(){
+    return new Promise(async (resolve) => {
+      let factorId = null;
+      try{ const { data } = await sb.auth.mfa.listFactors(); const f = data && data.totp && data.totp[0]; factorId = f && f.id; }catch(e){}
+      if(!factorId){ resolve(true); return; }
+      openModal({
+        title:'Two-step verification', small:true,
+        bodyHtml:`<p class="view-sub">Enter the 6-digit code from your authenticator app.</p><div class="field"><input type="text" id="mfaCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="123456"></div><p class="login-note" id="mfaNote"></p>`,
+        footerHtml:`<button class="btn-ghost" id="mfaCancel">Cancel</button><div class="modal-footer-right"><button class="btn-primary" style="width:auto;" id="mfaGo">Verify</button></div>`,
+        onMount(){
+          byId('mfaCancel').addEventListener('click', closeModal);
+          async function go(){
+            const code = byId('mfaCode').value.trim();
+            if(code.length !== 6){ byId('mfaNote').textContent = 'Enter the 6-digit code.'; return; }
+            byId('mfaNote').textContent = 'Checking…';
+            try{
+              const ch = await sb.auth.mfa.challenge({ factorId });
+              if(ch.error) throw ch.error;
+              const v = await sb.auth.mfa.verify({ factorId, challengeId: ch.data.id, code });
+              if(v.error) throw v.error;
+              ui.onModalClose = null; closeModal(); resolve(true);
+            }catch(e){ byId('mfaNote').textContent = 'That code didn’t work. Try the newest one.'; }
+          }
+          byId('mfaGo').addEventListener('click', go);
+          byId('mfaCode').addEventListener('keydown', (e) => { if(e.key === 'Enter') go(); });
+        }
+      });
+      ui.onModalClose = () => resolve(false);
+    });
+  }
+
+  async function mfaGate(){
+    try{
+      const { data } = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+      if(data && data.nextLevel === 'aal2' && data.currentLevel !== 'aal2') return await promptMfa();
+    }catch(e){}
+    return true;
+  }
+
+  async function refreshMfaRow(){
+    const row = byId('mfaRow'); if(!row) return;
+    let verified = null;
+    try{ const { data } = await sb.auth.mfa.listFactors(); verified = data && data.totp && data.totp[0]; }catch(e){}
+    row.innerHTML = `<div><div class="settings-row-label">Two-step verification</div><div class="settings-row-hint">${verified ? 'On — a code from your authenticator app is needed to log in.' : 'Off — add an authenticator app for extra security.'}</div></div>
+      <button class="btn-secondary btn-sm" id="mfaToggleBtn" type="button">${verified ? 'Turn off' : 'Turn on'}</button>`;
+    byId('mfaToggleBtn').addEventListener('click', () => {
+      if(verified){
+        confirmDialog('Turn off two-step verification?', { confirmLabel:'Turn off', onConfirm: async () => {
+          const { error } = await sb.auth.mfa.unenroll({ factorId: verified.id });
+          toast(error ? error.message : 'Two-step verification is off', error ? 'error' : undefined);
+          refreshMfaRow();
+        }});
+      } else { startMfaEnroll(); }
+    });
+  }
+
+  async function startMfaEnroll(){
+    try{
+      const { data: lf } = await sb.auth.mfa.listFactors();
+      for(const f of ((lf && lf.all) || [])){ if(f.status === 'unverified'){ await sb.auth.mfa.unenroll({ factorId: f.id }); } }
+      const { data, error } = await sb.auth.mfa.enroll({ factorType:'totp' });
+      if(error){ toast(error.message, 'error'); return; }
+      openModal({
+        title:'Turn on two-step verification', small:true,
+        bodyHtml:`<p class="view-sub">1. Scan this code with an authenticator app (Google Authenticator, Authy, 1Password&hellip;).</p>
+          <div style="text-align:center; margin:10px 0;"><img src="${data.totp.qr_code}" alt="QR code" style="width:180px;height:180px;background:#fff;padding:6px;border-radius:6px;"></div>
+          <p class="settings-row-hint">Or enter this key: <span class="mono">${escapeHtml(data.totp.secret)}</span></p>
+          <p class="view-sub" style="margin-top:12px;">2. Enter the 6-digit code it shows.</p>
+          <div class="field"><input type="text" id="mfaEnrollCode" inputmode="numeric" maxlength="6" placeholder="123456"></div><p class="login-note" id="mfaEnrollNote"></p>`,
+        footerHtml:`<button class="btn-ghost" id="mfaEnrollCancel">Cancel</button><div class="modal-footer-right"><button class="btn-primary" style="width:auto;" id="mfaEnrollGo">Turn on</button></div>`,
+        onMount(){
+          byId('mfaEnrollCancel').addEventListener('click', closeModal);
+          byId('mfaEnrollGo').addEventListener('click', async () => {
+            const code = byId('mfaEnrollCode').value.trim();
+            if(code.length !== 6){ byId('mfaEnrollNote').textContent = 'Enter the 6-digit code.'; return; }
+            try{
+              const ch = await sb.auth.mfa.challenge({ factorId: data.id });
+              if(ch.error) throw ch.error;
+              const v = await sb.auth.mfa.verify({ factorId: data.id, challengeId: ch.data.id, code });
+              if(v.error) throw v.error;
+              closeModal(); toast('Two-step verification is on', 'success'); refreshMfaRow();
+            }catch(e){ byId('mfaEnrollNote').textContent = 'That code didn’t work. Try the newest one.'; }
+          });
+        }
+      });
+    }catch(e){ toast('Could not start setup', 'error'); }
+  }
+
+  async function doMagicLink(){
+    const email = (byId('authEmail').value||'').trim();
+    if(!email){ setLoginNote('Enter your email first.'); return; }
+    setLoginNote('Sending link\u2026');
+    try{
+      const redirect = pageUrl();
+      const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: redirect } });
+      setLoginNote(error ? error.message : 'Check your email \u2014 tap the link to sign in.');
+    }catch(e){ setLoginNote('Could not reach the server. Check your connection.'); }
   }
 
   function enterApp(){
@@ -977,6 +1144,7 @@
   }
 
   async function enterCloudDocket(user){
+    if(!(await mfaGate())){ try{ await sb.auth.signOut(); }catch(e){} renderLoginMode(); return; }
     currentUser = user.id; isCloudUser = true; currentUserLabel = user.email || 'Account';
     setSyncStatus('syncing');
     let cloudData = null;
@@ -986,6 +1154,11 @@
     }catch(e){ /* offline or table missing — fall back to local cache below */ }
     if(cloudData){
       state = migrateState(cloudData);
+      try{
+        const loc = Store.get(dataKey(currentUser));
+        const tok = loc && JSON.parse(loc.value).settings.canvas.token;
+        if(tok){ state.settings.canvas.token = tok; state.settings.canvas.connected = true; }
+      }catch(e){}
       setSyncStatus('synced');
     } else {
       state = loadState(currentUser);
@@ -1063,7 +1236,7 @@
     if(!sb || !isCloudUser || !currentUser) return;
     setSyncStatus('syncing');
     try{
-      const { error } = await sb.from('docket_state').upsert({ user_id: currentUser, data: state, updated_at: new Date().toISOString() });
+      const { error } = await sb.from('docket_state').upsert({ user_id: currentUser, data: stateForCloud(), updated_at: new Date().toISOString() });
       setSyncStatus(error ? 'error' : 'synced');
     }catch(e){ setSyncStatus('error'); }
   }
@@ -1468,7 +1641,6 @@
     toggleSubtask, archiveAssignment, restoreAssignment,
     openClass: (id) => openClassDetail(id),
     openExam: (id) => openExamModal(id),
-    openNote: (id) => openNoteModal(id),
     calGoto: (iso) => { ui.calDate = parseISO(iso) || new Date(); setView('calendar'); },
     calNewAt: (iso) => openAssignmentModal(null, { due: iso })
   };
@@ -1500,6 +1672,12 @@
     el.innerHTML = `
       <p class="greeting serif">${greetingWord()}, ${escapeHtml(currentUserLabel)}.</p>
       <p class="greeting-date">${todayDate().toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'})}${dayTypeLabel(todayISO()) ? ' &middot; ' + escapeHtml(dayTypeLabel(todayISO())) : ''}${nextClass ? ' &middot; Next class: ' + escapeHtml(nextClass.name) + ' at ' + fmtTime12(nextClass.start) : ''}</p>
+
+      <div class="add-row">
+        <input type="text" id="dashQuickInput" placeholder="Quick add: 'lit homework due friday' or 'bio test thursday'" style="flex:1 1 260px;">
+        <button class="btn-add" id="dashQuickBtn">Add</button>
+      </div>
+      <p class="quick-preview" id="dashQuickPreview"></p>
 
       <div class="grid-stats">
         <div class="stat-card"><div class="stat-num">${totalActive}</div><div class="stat-label">Active assignments</div></div>
@@ -1560,6 +1738,7 @@
         <div id="dashPlanResult" style="margin-top:14px;"></div>
       </div>
     `;
+    bindQuickAdd('dashQuickInput', null, 'dashQuickBtn', 'dashQuickPreview', renderCurrentView);
     byId('dashPlanBtn').addEventListener('click', () => { renderPlanMyDay(byId('dashPlanResult')); });
     if(state.planMyDay && state.planMyDay.date === todayISO()){ renderPlanMyDay(byId('dashPlanResult'), true); }
   };
@@ -1807,7 +1986,7 @@
         </div>
       </div>
       <div class="task-actions">
-        ${isDone(a) && !a.archived ? `<button class="btn-ghost" style="font-size:11px;" onclick="event.stopPropagation(); __docket.archiveAssign('${a.id}')">Archive</button>` : ''}
+        ${isDone(a) && !a.archived ? `<button class="btn-ghost" style="font-size:11px;" onclick="event.stopPropagation(); __docket.archiveAssignment('${a.id}')">Archive</button>` : ''}
         ${a.archived ? `<button class="btn-ghost" style="font-size:11px;" onclick="event.stopPropagation(); __docket.restoreAssign('${a.id}')">Restore</button>` : ''}
         <button class="task-delete" onclick="event.stopPropagation(); __docket.deleteAssign('${a.id}')" aria-label="Delete">&times;</button>
       </div>
@@ -1833,10 +2012,11 @@
       </div>
 
       <div class="add-row">
-        <input type="text" id="quickTitleInput" placeholder="Quick add: 'Math homework Friday'">
+        <input type="text" id="quickTitleInput" placeholder="Quick add: 'lit homework due friday' or 'bio test thursday'">
         <input type="date" id="quickDueInput">
         <button class="btn-add" id="quickAddBtn">Add</button>
       </div>
+      <p class="quick-preview" id="quickPreview"></p>
 
       <div class="toolbar">
         <select id="fStatus">
@@ -1868,8 +2048,7 @@
 
     byId('assignNewBtn').addEventListener('click', () => openAssignmentModal(null));
     byId('viewArchiveBtn').addEventListener('click', openArchiveModal);
-    byId('quickAddBtn').addEventListener('click', quickAddFromToolbar);
-    byId('quickTitleInput').addEventListener('keydown', (e) => { if(e.key==='Enter') quickAddFromToolbar(); });
+    bindQuickAdd('quickTitleInput','quickDueInput','quickAddBtn','quickPreview', renderAssignmentGroups);
     ['fStatus','fSubject','fPriority','fType','fSort'].forEach(id => {
       const node = byId(id); if(node) node.addEventListener('change', (e) => { f[id.slice(1).toLowerCase()] = e.target.value; renderAssignmentGroups(); });
     });
@@ -1881,40 +2060,188 @@
     renderAssignmentGroups();
   };
 
-  function quickAddFromToolbar(){
-    const titleRaw = byId('quickTitleInput').value.trim();
-    const dueField = byId('quickDueInput').value;
-    if(!titleRaw) return;
-    const parsed = parseQuickAdd(titleRaw);
-    const a = newAssignment({ title: parsed.title, due: dueField || parsed.due || '' });
-    state.assignments.push(a);
-    logActivity('add', 'Added "'+a.title+'"');
-    saveState();
-    byId('quickTitleInput').value=''; byId('quickDueInput').value='';
-    renderAssignmentGroups();
-    toast('Assignment added', 'success');
+  /* ---------- smart quick-add ---------- */
+  const QA_STOP = new Set(['of','the','and','a','an','to','for','in','on','at','by','due','is','my','class','i','have','got','need','with']);
+  const QA_DAY_ABBR = { sun:0, sunday:0, mon:1, monday:1, tue:2, tues:2, tuesday:2, wed:3, weds:3, wednesday:3, thu:4, thur:4, thurs:4, thursday:4, fri:5, friday:5, sat:6, saturday:6 };
+  const QA_TYPES = [
+    { re:/^(test|tests|exam|exams|midterm|midterms|final|finals)$/, type:'test', exam:true },
+    { re:/^(quiz|quizzes)$/, type:'quiz' },
+    { re:/^(homework|hw|worksheet|worksheets)$/, type:'homework' },
+    { re:/^(essay|essays|paper)$/, type:'essay' },
+    { re:/^(project|proj)$/, type:'project' },
+    { re:/^(lab|labs)$/, type:'lab' },
+    { re:/^(reading|read)$/, type:'reading' }
+  ];
+
+  function qaNextWeekday(dow, mod){
+    const t = todayDate();
+    let delta = (dow - t.getDay() + 7) % 7;
+    if(delta === 0) delta = 7;
+    if(mod === 'next'){
+      const endOfWeek = (7 - t.getDay()) % 7; // days until Sunday
+      if(delta <= endOfWeek) delta += 7;
+    }
+    return fmtISO(addDays(t, delta));
   }
 
-  function parseQuickAdd(text){
-    const weekdays = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
-    const lower = text.toLowerCase();
-    let due = '';
-    let title = text;
-    const wd = weekdays.find(w => lower.endsWith(' ' + w) || lower.endsWith(' ' + w.slice(0,3)));
-    if(lower.endsWith(' today')){ due = todayISO(); title = text.slice(0, -6).trim(); }
-    else if(lower.endsWith(' tomorrow')){ due = fmtISO(addDays(todayDate(),1)); title = text.slice(0,-9).trim(); }
-    else if(wd){
-      const targetIdx = weekdays.indexOf(wd);
-      const todayIdx = todayDate().getDay();
-      let delta = (targetIdx - todayIdx + 7) % 7;
-      if(delta === 0) delta = 7;
-      due = fmtISO(addDays(todayDate(), delta));
-      const re = new RegExp('\\s+' + wd + '$', 'i');
-      title = text.replace(re, '').trim();
-      const re2 = new RegExp('\\s+' + wd.slice(0,3) + '$', 'i');
-      title = title.replace(re2, '').trim();
+  const QA_CLASS_FILLER = new Set(['ap','ib','honors','honor','hon','cp','accelerated','intro','introduction','advanced','adv','regular','basic','i','ii','iii','iv','of','the','and','a','an','to','for','in']);
+  const QA_GROUPS = [
+    ['math','maths','mathematics','algebra','geometry','calculus','calc','precalc','precalculus','trig','trigonometry','statistics','stats','stat'],
+    ['english','lit','literature','ela','writing','composition','comp','rhetoric','journalism','grammar'],
+    ['science','sci','biology','bio','chemistry','chem','physics','phys','anatomy','physiology','environmental','geology','astronomy','apes'],
+    ['history','hist','social','studies','government','gov','civics','econ','economics','geography','apush','apwh','ush'],
+    ['spanish','french','german','latin','chinese','japanese','mandarin','italian','language','lang','esl','arabic'],
+    ['art','arts','drawing','painting','ceramics','photography','design','studio','sculpture'],
+    ['music','band','orchestra','choir','chorus','jazz','guitar','piano','theory'],
+    ['pe','gym','physed','health','fitness','weights','athletics'],
+    ['cs','computer','computers','coding','programming','code','compsci','tech','technology','robotics','engineering'],
+    ['business','accounting','marketing','finance','economics']
+  ];
+
+  function qaEditDistance(a, b){
+    if(Math.abs(a.length - b.length) > 2) return 3;
+    const dp = [];
+    for(let i=0;i<=a.length;i++){ dp[i] = [i]; }
+    for(let j=1;j<=b.length;j++){ dp[0][j] = j; }
+    for(let i=1;i<=a.length;i++){
+      for(let j=1;j<=b.length;j++){
+        dp[i][j] = Math.min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1] + (a[i-1]===b[j-1] ? 0 : 1));
+      }
     }
-    return { title: title || text, due };
+    return dp[a.length][b.length];
+  }
+
+  // how well does one typed word match one class-name word? (0 = no match)
+  function qaWordMatch(t, w){
+    if(t === w) return 1.5;
+    if(t.length >= 3 && w.startsWith(t)) return 1.0;
+    if(w.length >= 4 && t.length >= 3 && t.startsWith(w)) return 0.9;
+    if(t.length >= 5 && qaEditDistance(t, w) <= (t.length >= 8 ? 2 : 1)) return 0.9;
+    return 0;
+  }
+
+  function qaScoreClass(c, words, lw, used){
+    const all = c.name.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+    let sig = all.filter(x => !QA_CLASS_FILLER.has(x));
+    if(!sig.length) sig = all;
+    const acr1 = sig.map(x => x[0]).join('');
+    const acr2 = all.map(x => x[0]).join('');
+    // subject groups this class belongs to (any name word, or its prefix, is in the group)
+    const syn = new Set();
+    QA_GROUPS.forEach(g => {
+      if(sig.some(w => g.some(gw => gw === w || (w.length >= 4 && gw.startsWith(w)) || (gw.length >= 4 && w.startsWith(gw))))){ g.forEach(gw => syn.add(gw)); }
+    });
+    let score = 0; const toks = [];
+    for(let i=0;i<words.length;i++){
+      if(used[i]) continue;
+      const t = lw[i];
+      if(t.length < 2 || QA_STOP.has(t)) continue;
+      let s = 0;
+      sig.forEach(w => { s = Math.max(s, qaWordMatch(t, w)); });
+      if(t.length >= 2 && (t === acr1 || t === acr2) && t.length >= 2) s = Math.max(s, 2);
+      if(!s){
+        syn.forEach(gw => { const m = qaWordMatch(t, gw); if(m) s = Math.max(s, Math.min(m, 1) * 0.85); });
+      }
+      if(s){ score += s; toks.push(i); }
+    }
+    return { score, toks };
+  }
+
+  function parseQuick(text){
+    const words = text.trim().split(/\s+/).filter(Boolean);
+    const used = words.map(() => false);
+    const lw = words.map(w => w.toLowerCase().replace(/[.,!?;:]+$/,''));
+    let due = '', typeInfo = null, typeWord = '';
+
+    for(let i=0;i<words.length;i++){
+      const w = lw[i];
+      if(w === 'today' || w === 'tonight'){ due = todayISO(); used[i] = true; }
+      else if(w === 'tomorrow' || w === 'tmrw' || w === 'tmr'){ due = fmtISO(addDays(todayDate(),1)); used[i] = true; }
+      else if(QA_DAY_ABBR.hasOwnProperty(w)){
+        const prev = i > 0 ? lw[i-1] : '';
+        const mod = prev === 'next' ? 'next' : '';
+        due = qaNextWeekday(QA_DAY_ABBR[w], mod);
+        used[i] = true;
+        if(prev === 'next' || prev === 'this' || prev === 'coming') used[i-1] = true;
+      }
+      else if(/^\d{1,2}\/\d{1,2}(\/\d{2,4})?$/.test(w)){
+        const [m,d,y] = w.split('/').map(Number);
+        let year = y ? (y < 100 ? 2000 + y : y) : todayDate().getFullYear();
+        let dt = new Date(year, m-1, d);
+        if(!y && dt < todayDate()) dt = new Date(year+1, m-1, d);
+        if(!isNaN(dt.getTime()) && dt.getMonth() === m-1){ due = fmtISO(dt); used[i] = true; }
+      }
+      else if(w === 'in' && /^\d{1,2}$/.test(lw[i+1]||'') && /^days?$/.test(lw[i+2]||'')){
+        due = fmtISO(addDays(todayDate(), Number(lw[i+1])));
+        used[i] = used[i+1] = used[i+2] = true;
+      }
+      else if(!typeInfo){
+        const t = QA_TYPES.find(x => x.re.test(w));
+        if(t){ typeInfo = t; typeWord = (t.type === 'test' ? words[i].toLowerCase() : t.type); used[i] = true; }
+      }
+    }
+
+    // class matching on remaining words
+    let best = null, bestScore = 0, bestTokens = [];
+    state.classes.forEach(c => {
+      const r = qaScoreClass(c, words, lw, used);
+      if(r.score > bestScore){ best = c; bestScore = r.score; bestTokens = r.toks; }
+    });
+    if(bestScore < 0.8){ best = null; bestTokens = []; }
+    if(best){
+      bestTokens.forEach(i => used[i] = true);
+      const nameWords = best.name.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+      lw.forEach((t,i) => { if(!used[i] && nameWords.indexOf(t) !== -1) used[i] = true; });
+    }
+
+    // leftover words → title
+    let left = words.filter((w,i) => !used[i]);
+    while(left.length && QA_STOP.has(left[0].toLowerCase())) left.shift();
+    while(left.length && QA_STOP.has(left[left.length-1].toLowerCase())) left.pop();
+    const parts = [best ? best.name : '', left.join(' '), typeWord].filter(Boolean);
+    let title = parts.join(' ').trim() || text.trim();
+    title = title.charAt(0).toUpperCase() + title.slice(1);
+    return { title, due, cls: best, type: typeInfo ? typeInfo.type : 'homework', exam: !!(typeInfo && typeInfo.exam) };
+  }
+
+  function quickPreviewText(raw, dueOverride){
+    const p = parseQuick(raw);
+    if(dueOverride) p.due = dueOverride;
+    const when = p.due ? weekdayName(p.due).slice(0,3) + ' ' + shortDate(p.due) : 'no date';
+    return (p.exam ? 'Exam' : 'Task') + ': ' + p.title + ' · ' + (p.cls ? p.cls.name : 'no class matched') + ' · ' + when;
+  }
+
+  function quickCommit(raw, dueOverride){
+    const p = parseQuick(raw);
+    if(dueOverride) p.due = dueOverride;
+    if(p.exam){
+      if(!p.due){ toast('Pick a date for this exam'); openExamModal(null, { name:p.title, classId: p.cls ? p.cls.id : '' }); return true; }
+      state.exams.push({ id:uid(), name:p.title, classId: p.cls ? p.cls.id : null, date:p.due, time:'', location:'', topics:'', notes:'', created:Date.now() });
+      logActivity('add', 'Added exam "' + p.title + '"');
+      saveState();
+      toast('Exam added — ' + shortDate(p.due), 'success');
+      return true;
+    }
+    const a = newAssignment({ title:p.title, subject: p.cls ? p.cls.name : '', due:p.due, type:p.type });
+    state.assignments.push(a);
+    logActivity('add', 'Added "' + a.title + '"');
+    saveState();
+    toast('Added' + (p.due ? ' — due ' + shortDate(p.due) : ''), 'success');
+    return true;
+  }
+
+  function bindQuickAdd(inId, dueId, btnId, prevId, after){
+    const inp = byId(inId), due = dueId ? byId(dueId) : null, prev = byId(prevId);
+    if(!inp) return;
+    const upd = () => { const v = inp.value.trim(); prev.textContent = v ? quickPreviewText(v, due && due.value) : ''; };
+    const go = () => {
+      const raw = inp.value.trim(); if(!raw) return;
+      if(quickCommit(raw, due && due.value)){ inp.value = ''; if(due) due.value = ''; prev.textContent = ''; if(after) after(); updateNavBadge(); }
+    };
+    inp.addEventListener('input', upd);
+    if(due) due.addEventListener('change', upd);
+    inp.addEventListener('keydown', (e) => { if(e.key === 'Enter') go(); });
+    byId(btnId).addEventListener('click', go);
   }
 
   function renderAssignmentGroups(){
@@ -2002,7 +2329,7 @@
           <button type="button" data-v="day">Day</button>
         </div>
       </div>
-      <div id="calBody"></div>
+      <div id="calBody" class="cal-scroll"></div>
     `;
     qsa('#calViewToggle button').forEach(b => {
       b.classList.toggle('active', b.dataset.v === ui.calView);
@@ -2055,8 +2382,7 @@
       const isToday = iso === todayISO();
       html += `<div class="cal-cell ${inMonth?'':'other-month'} ${isToday?'today':''}" data-date="${iso}">
         <div class="cal-daynum">${day.getDate()}</div>
-        ${evs.slice(0,3).map(e => `<div class="cal-event ${e.kind==='exam'?'exam-ev':(e.overdue?'overdue-ev':'')}" data-ev="${e.kind}:${e.id}">${escapeHtml(e.title)}</div>`).join('')}
-        ${evs.length>3 ? `<div class="cal-more">+${evs.length-3} more</div>` : ''}
+        ${evs.map(e => `<div class="cal-event ${e.kind==='exam'?'exam-ev':(e.overdue?'overdue-ev':'')}" data-ev="${e.kind}:${e.id}">${escapeHtml(e.title)}</div>`).join('')}
       </div>`;
       if(i%7===6 && i<41) {} // continue grid
     }
@@ -2116,72 +2442,6 @@
     });
     const newAtBtn = qs('[data-newat]', body);
     if(newAtBtn) newAtBtn.addEventListener('click', () => __docket.calNewAt(newAtBtn.dataset.newat));
-  }
-
-  /* =========================================================
-     WEEKLY PLANNER
-     ========================================================= */
-  VIEW_RENDERERS.planner = function(){
-    const el = byId('view-planner');
-    el.innerHTML = `
-      <div class="view-header">
-        <div><h1 class="view-title">Weekly Planner</h1><p class="view-sub">Assignments, exams and study blocks, Monday through Sunday.</p></div>
-        <div class="view-actions">
-          <button class="btn-secondary btn-sm" id="plPrev">&larr; Prev week</button>
-          <button class="btn-secondary btn-sm" id="plToday">This week</button>
-          <button class="btn-secondary btn-sm" id="plNext">Next week &rarr;</button>
-        </div>
-      </div>
-      <div class="planner-grid" id="plannerGrid"></div>
-    `;
-    byId('plPrev').addEventListener('click', () => { ui.plannerWeekOffset--; renderPlanner(); });
-    byId('plNext').addEventListener('click', () => { ui.plannerWeekOffset++; renderPlanner(); });
-    byId('plToday').addEventListener('click', () => { ui.plannerWeekOffset = 0; renderPlanner(); });
-    renderPlanner();
-  };
-
-  function renderPlanner(){
-    const grid = byId('plannerGrid');
-    if(!grid) return;
-    const weekStart = state.settings.weekStart || 1;
-    const base = addDays(todayDate(), ui.plannerWeekOffset*7);
-    let offset = (base.getDay() - weekStart + 7) % 7;
-    const start = addDays(base, -offset);
-    let html = '';
-    for(let i=0;i<7;i++){
-      const day = addDays(start, i); const iso = fmtISO(day);
-      const isToday = iso === todayISO();
-      const evs = eventsForDate(iso);
-      const sessions = state.studySessions.filter(s=>s.date===iso);
-      html += `<div class="planner-day ${isToday?'today-col':''}">
-        <div class="planner-day-head">${day.toLocaleDateString(undefined,{weekday:'short'})} <span class="planner-day-date">${day.getDate()}</span></div>
-        ${evs.map(e => `<div class="planner-item ${e.kind==='exam'?'exam-item':''}" data-ev="${e.kind}:${e.id}">${escapeHtml(e.title)}</div>`).join('')}
-        ${sessions.map(s => `<div class="planner-item study-item" data-study="${s.id}"><div class="planner-item-time">${fmtTime12(s.startTime)}</div>${escapeHtml(s.subject||'Study')} &middot; ${s.durationMin}min</div>`).join('')}
-        <button class="planner-add" data-newat="${iso}">+ Add</button>
-      </div>`;
-    }
-    grid.innerHTML = html;
-    qsa('[data-ev]', grid).forEach(evEl => evEl.addEventListener('click', () => {
-      const [kind,id] = evEl.dataset.ev.split(':');
-      if(kind==='assignment') openAssignmentModal(id); else openExamModal(id);
-    }));
-    qsa('[data-study]', grid).forEach(evEl => evEl.addEventListener('click', () => openStudySessionModal(evEl.dataset.study)));
-    qsa('[data-newat]', grid).forEach(btn => btn.addEventListener('click', () => openPlannerAddChoice(btn.dataset.newat)));
-  }
-
-  function openPlannerAddChoice(iso){
-    openModal({
-      title: 'Add to ' + shortDate(iso), small:true,
-      bodyHtml: `<p class="view-sub">What would you like to add on this day?</p>`,
-      footerHtml: `<div></div><div class="modal-footer-right" style="flex-direction:column; align-items:stretch; gap:8px;">
-        <button class="btn-secondary" id="pcAssign">Assignment</button>
-        <button class="btn-secondary" id="pcStudy">Study session</button>
-      </div>`,
-      onMount(){
-        byId('pcAssign').addEventListener('click', () => { closeModal(); openAssignmentModal(null, { due: iso }); });
-        byId('pcStudy').addEventListener('click', () => { closeModal(); openStudySessionModal(null, { date: iso }); });
-      }
-    });
   }
 
   /* =========================================================
@@ -2557,10 +2817,11 @@
     qsa('.exam-card', el).forEach(c => c.addEventListener('click', () => openExamModal(c.dataset.id)));
   }
 
-  function openExamModal(id){
+  function openExamModal(id, prefill){
     const existing = id ? state.exams.find(e=>e.id===id) : null;
     const e = existing || { id: uid(), name:'', classId:'', date:'', time:'', location:'', topics:'', notes:'', created:Date.now() };
     const isNew = !existing;
+    if(isNew && prefill) Object.assign(e, prefill);
     openModal({
       title: isNew ? 'New exam' : 'Edit exam',
       bodyHtml: `
@@ -2589,72 +2850,6 @@
           e.date = date; e.time = byId('exTime').value; e.topics = byId('exTopics').value; e.notes = byId('exNotes').value;
           if(isNew){ state.exams.push(e); logActivity('add','Added exam "'+e.name+'"'); } else { logActivity('edit','Edited exam "'+e.name+'"'); }
           saveState(); closeModal(); renderCurrentView(); toast(isNew?'Exam added':'Saved','success');
-        });
-      }
-    });
-  }
-
-  /* =========================================================
-     NOTES
-     ========================================================= */
-  VIEW_RENDERERS.notes = function(){
-    const el = byId('view-notes');
-    el.innerHTML = `
-      <div class="view-header">
-        <div><h1 class="view-title">Notes</h1><p class="view-sub">${state.notes.length} note${state.notes.length===1?'':'s'}</p></div>
-        <div class="view-actions"><button class="btn-primary" style="width:auto;" id="noteNewBtn">+ New note</button></div>
-      </div>
-      <div class="toolbar"><input type="text" id="noteSearch" placeholder="Search notes&hellip;" style="flex:1;"></div>
-      <div id="noteList"></div>
-    `;
-    byId('noteNewBtn').addEventListener('click', () => openNoteModal(null));
-    byId('noteSearch').addEventListener('input', (e) => renderNoteList(e.target.value.trim().toLowerCase()));
-    renderNoteList('');
-  };
-
-  function renderNoteList(q){
-    const el = byId('noteList'); if(!el) return;
-    let list = state.notes.slice().sort((a,b)=>b.modified-a.modified);
-    if(q) list = list.filter(n => (n.title+' '+n.body+' '+n.tags.join(' ')).toLowerCase().includes(q));
-    if(!list.length){ el.innerHTML = `<p class="empty-state">${state.notes.length?'No notes match your search.':'No notes yet. Capture something from class.'}</p>`; return; }
-    el.innerHTML = list.map(n => `<div class="note-card" data-id="${n.id}">
-      <div class="note-title">${escapeHtml(n.title||'Untitled note')}</div>
-      <div class="note-preview">${escapeHtml(n.body||'')}</div>
-      <div class="note-meta">${n.subject?escapeHtml(n.subject)+' &middot; ':''}${new Date(n.modified).toLocaleDateString(undefined,{month:'short',day:'numeric'})}</div>
-    </div>`).join('');
-    qsa('.note-card', el).forEach(c => c.addEventListener('click', () => openNoteModal(c.dataset.id)));
-  }
-
-  function openNoteModal(id){
-    const existing = id ? state.notes.find(n=>n.id===id) : null;
-    const n = existing || { id: uid(), title:'', body:'', subject:'', tags:[], created:Date.now(), modified:Date.now() };
-    const isNew = !existing;
-    openModal({
-      title: isNew ? 'New note' : 'Edit note', large:true,
-      bodyHtml: `
-        <div class="field"><label>Title</label><input type="text" id="ntTitle" value="${escapeHtml(n.title)}"></div>
-        <div class="field-row"><div class="field"><label>Subject</label><input type="text" id="ntSubject" value="${escapeHtml(n.subject)}" list="subjectDataList"></div>
-        <div class="field"><label>Tags (comma-separated)</label><input type="text" id="ntTags" value="${escapeHtml((n.tags||[]).join(', '))}"></div></div>
-        <div class="field"><label>Body</label><textarea id="ntBody" style="min-height:200px;">${escapeHtml(n.body)}</textarea></div>
-        <datalist id="subjectDataList">${state.classes.map(c=>`<option value="${escapeHtml(c.name)}">`).join('')}</datalist>
-      `,
-      footerHtml: `<div>${isNew?'':'<button class="btn-danger btn-sm" id="ntDelete">Delete</button>'}</div>
-        <div class="modal-footer-right"><button class="btn-ghost" id="ntCancel">Cancel</button><button class="btn-primary" style="width:auto;" id="ntSave">${isNew?'Save note':'Save'}</button></div>`,
-      onMount(){
-        byId('ntCancel').addEventListener('click', closeModal);
-        if(!isNew) byId('ntDelete').addEventListener('click', () => {
-          confirmDialog('Delete this note?', { confirmLabel:'Delete', onConfirm(){
-            state.notes = state.notes.filter(x=>x.id!==n.id); saveState(); closeModal(); renderCurrentView(); toast('Note deleted');
-          }});
-        });
-        byId('ntSave').addEventListener('click', () => {
-          n.title = byId('ntTitle').value.trim() || 'Untitled note';
-          n.subject = byId('ntSubject').value.trim();
-          n.tags = byId('ntTags').value.split(',').map(t=>t.trim()).filter(Boolean);
-          n.body = byId('ntBody').value;
-          n.modified = Date.now();
-          if(isNew){ state.notes.push(n); logActivity('note','Added note "'+n.title+'"'); } else { logActivity('note','Edited note "'+n.title+'"'); }
-          saveState(); closeModal(); renderCurrentView(); toast('Note saved','success');
         });
       }
     });
@@ -2817,6 +3012,7 @@
         <h3>Account</h3>
         <div class="settings-row"><span class="settings-row-label">${isCloudUser ? 'Email' : 'Name'}</span><span class="mono">${escapeHtml(currentUserLabel)}</span></div>
         <div class="settings-row"><span class="settings-row-label">Storage</span><span>${isCloudUser ? 'Synced to your Docket account (Supabase)' : 'This browser only'}</span></div>
+        ${isCloudUser ? `<div class="settings-row" id="mfaRow"><span class="settings-row-hint">Checking security settings&hellip;</span></div>` : ''}
         ${isCloudUser ? `<div class="settings-row"><span class="settings-row-label">Sync now</span><button class="btn-secondary btn-sm" id="setSyncNowBtn" type="button">Sync now</button></div>` : ''}
       </div>
 
@@ -2865,7 +3061,7 @@
 
       <div class="settings-section">
         <h3>Data</h3>
-        <div class="settings-row"><div><div class="settings-row-label">Export all data</div><div class="settings-row-hint">Assignments, classes, exams, notes, schedule, study sessions and settings as JSON.</div></div><button class="btn-secondary btn-sm" id="exportJsonBtn">Export JSON</button></div>
+        <div class="settings-row"><div><div class="settings-row-label">Export all data</div><div class="settings-row-hint">Assignments, classes, exams, schedule, study sessions and settings as JSON.</div></div><button class="btn-secondary btn-sm" id="exportJsonBtn">Export JSON</button></div>
         <div class="settings-row"><div><div class="settings-row-label">Export assignments as CSV</div></div><button class="btn-secondary btn-sm" id="exportCsvBtn">Export CSV</button></div>
         <div class="settings-row"><div><div class="settings-row-label">Import data</div><div class="settings-row-hint">Replaces current data for this account with a previously exported file.</div></div><button class="btn-secondary btn-sm" id="importJsonBtn">Import JSON</button></div>
         <div class="settings-row"><div><div class="settings-row-label">Load demo data</div></div><button class="btn-secondary btn-sm" id="loadDemoBtn">Load demo data</button></div>
@@ -2875,6 +3071,7 @@
     `;
 
     qsa('#setTheme button').forEach(b => b.addEventListener('click', () => { state.settings.theme=b.dataset.v; saveState(); applyTheme(); renderCurrentView(); }));
+    if(isCloudUser) refreshMfaRow();
     if(byId('setSyncNowBtn')) byId('setSyncNowBtn').addEventListener('click', async () => { await pushCloudState(); toast('Sync attempted — check the status next to your name'); });
     byId('setDuration').addEventListener('change', (e) => { state.settings.defaultDuration = Number(e.target.value)||30; saveState(); });
     qsa('#setWeekStart button').forEach(b => b.addEventListener('click', () => { state.settings.weekStart=Number(b.dataset.v); saveState(); renderCurrentView(); }));
@@ -3030,7 +3227,7 @@
   function openSearchModal(){
     openModal({
       title: 'Search', large:true,
-      bodyHtml: `<input type="text" id="searchInput" class="search-input-lg" placeholder="Search assignments, classes, exams, notes&hellip;">
+      bodyHtml: `<input type="text" id="searchInput" class="search-input-lg" placeholder="Search assignments, classes, exams&hellip;">
         <div id="searchResults" style="margin-top:10px;"></div>`,
       onMount(){
         byId('searchInput').addEventListener('input', (e) => renderSearchResults(e.target.value.trim().toLowerCase()));
@@ -3046,7 +3243,6 @@
     activeAssignments().forEach(a => { if((a.title+' '+subjectLabel(a)+' '+a.tags.join(' ')).toLowerCase().includes(q)) results.push({ type:'Assignment', title:a.title, sub: subjectLabel(a), action:()=>openAssignmentModal(a.id) }); });
     state.classes.forEach(c => { if((c.name+' '+(c.teacher||'')).toLowerCase().includes(q)) results.push({ type:'Class', title:c.name, sub:c.teacher||'', action:()=>openClassDetail(c.id) }); });
     state.exams.forEach(ex => { if(ex.name.toLowerCase().includes(q)) results.push({ type:'Exam', title:ex.name, sub: shortDate(ex.date), action:()=>openExamModal(ex.id) }); });
-    state.notes.forEach(n => { if((n.title+' '+n.body).toLowerCase().includes(q)) results.push({ type:'Note', title:n.title||'Untitled note', sub: (n.body||'').slice(0,60), action:()=>openNoteModal(n.id) }); });
     if(!results.length){ el.innerHTML = `<p class="empty-state">No results for "${escapeHtml(q)}".</p>`; return; }
     el.innerHTML = results.slice(0,30).map((r,i) => `<div class="search-result" data-i="${i}"><span class="search-result-type">${r.type}</span><span>${escapeHtml(r.title)}${r.sub?' — <span style="color:var(--muted);">'+escapeHtml(r.sub)+'</span>':''}</span></div>`).join('');
     qsa('.search-result', el).forEach((row,i) => row.addEventListener('click', () => { closeModal(); setTimeout(()=>results[i].action(), 60); }));
@@ -3074,8 +3270,6 @@
 
     state.studySessions.push({ id: uid(), subject: math.name, classId: math.id, assignmentId:null, date: todayISO(), startTime:'16:00', durationMin:30, completed:false, actualMin:0, created:Date.now(), demo:true });
 
-    state.notes.push({ id: uid(), title:'Osmosis — key terms', body:'Hypertonic, hypotonic, isotonic solutions and how they affect cell volume. Review diagram from Monday\'s lecture before the test.', subject: bio.name, tags:['biology','exam-prep'], created:Date.now(), modified:Date.now(), demo:true });
-
     state.ui.demo = true;
     state.ui.onboarded = true;
     logActivity('demo', 'Loaded demo data');
@@ -3084,7 +3278,6 @@
     state.assignments = state.assignments.filter(a=>!a.demo);
     state.classes = state.classes.filter(c=>!c.demo);
     state.exams = state.exams.filter(e=>!e.demo);
-    state.notes = state.notes.filter(n=>!n.demo);
     state.studySessions = state.studySessions.filter(s=>!s.demo);
     state.ui.demo = false;
   }
@@ -3107,6 +3300,7 @@
      ========================================================= */
   renderLoginMode();
   applyTheme();
+  if(sb){ sb.auth.onAuthStateChange((evt) => { if(evt === 'PASSWORD_RECOVERY'){ setTimeout(openNewPasswordModal, 900); } }); }
   restoreSession();
 })();
 </script>
