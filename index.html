@@ -2699,8 +2699,6 @@
         <div class="field"><label for="sbLunchLen">Lunch length (min)</label><input type="number" id="sbLunchLen" min="10" max="90" step="5" value="${bld.lunchLen||30}"></div></div>
         <div class="field"><label for="sbTermStart">New term / semester? Start this schedule on (optional)</label><input type="date" id="sbTermStart" value="${bld.termStart||''}">
         <p class="settings-row-hint">Leave blank to replace your whole schedule. If you set a date, your current classes keep working until the day before and the new ones take over from then.</p></div>
-        <div class="field"><label for="sbTermStart">New term / semester? Start this schedule on (optional)</label><input type="date" id="sbTermStart" value="${bld.termStart||''}">
-        <p class="settings-row-hint">Leave blank to replace your whole schedule. If you set a date, your current classes keep working until the day before and the new ones take over from then.</p></div>
         <div class="field"><label for="sbNoSchool">No-school dates (optional)</label><textarea id="sbNoSchool" placeholder="2026-11-25 to 2026-11-27&#10;2026-12-21 to 2027-01-01">${escapeHtml(bld.noSchool)}</textarea>
         <p class="settings-row-hint">One per line: a date or a range (YYYY-MM-DD to YYYY-MM-DD). ${t==='ab'||t==='rotating' ? 'The rotation skips these days.' : ''}</p></div>
         <div class="field"><label>Year-round calendar? Fill in repeating breaks</label>
@@ -2852,9 +2850,10 @@
   ].join('\n');
 
   function aiNormTime(t){
-    const m = String(t == null ? '' : t).trim().match(/^(\d{1,2}):(\d{2})$/);
+    const m = String(t == null ? '' : t).trim().toLowerCase().replace(/\./g, ':').match(/^(\d{1,2})(?::(\d{2}))?(?::\d{2})?\s*([ap])?\.?m?\.?$/);
     if(!m) return '';
-    const h = Number(m[1]), mi = Number(m[2]);
+    let h = Number(m[1]); const mi = m[2] ? Number(m[2]) : 0;
+    if(m[3]){ if(h < 1 || h > 12) return ''; h = (h % 12) + (m[3] === 'p' ? 12 : 0); }
     if(h > 23 || mi > 59) return '';
     return pad2(h) + ':' + pad2(mi);
   }
@@ -2863,15 +2862,36 @@
   function aiParseImport(raw){
     const arr = x => Array.isArray(x) ? x : [];
     const txt = String(raw || '').trim();
-    const a = txt.indexOf('{'), z = txt.lastIndexOf('}');
-    if(a < 0 || z <= a) return { error:'No data found. Paste the whole reply from the AI chat.' };
-    let o;
-    try{ o = JSON.parse(txt.slice(a, z + 1)); }
-    catch(e){ return { error:'That reply isn’t in the expected format. Ask the AI to reply with only the JSON.' }; }
+    if(txt.indexOf('{') < 0) return { error:'No data found. Paste the whole reply from the AI chat.' };
+    const tidy = t => t.replace(/^\s*\/\/.*$/gm, '').replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'").replace(/,\s*([}\]])/g, '$1').replace(/\bNone\b/g, 'null').replace(/\bTrue\b/g, 'true').replace(/\bFalse\b/g, 'false');
+    let o, firstErr = '';
+    for(let i = txt.indexOf('{'); i >= 0 && o === undefined; i = txt.indexOf('{', i + 1)){
+      let depth = 0, inStr = false, esc = false, j = i;
+      for(; j < txt.length; j++){
+        const ch = txt[j];
+        if(inStr){ if(esc) esc = false; else if(ch === '\\') esc = true; else if(ch === '"') inStr = false; continue; }
+        if(ch === '"') inStr = true;
+        else if(ch === '{') depth++;
+        else if(ch === '}'){ depth--; if(depth === 0) break; }
+      }
+      const cand = j < txt.length ? txt.slice(i, j + 1) : txt.slice(i);
+      for(const c of [cand, tidy(cand)]){
+        try{ const v = JSON.parse(c); if(v && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length > 1){ o = v; break; } }
+        catch(e){ if(!firstErr) firstErr = String(e.message || e).slice(0, 90); }
+      }
+    }
+    if(o === undefined) return { error:'That reply isn’t valid JSON (' + (firstErr || 'unknown problem') + '). Ask the AI to reply with only the JSON, and make sure you copied all of it.' };
     if(!o || typeof o !== 'object') return { error:'That reply isn’t in the expected format.' };
+    if(o.scheduleType === undefined && !Array.isArray(o)){
+      const inner = Object.keys(o).map(k => o[k]).find(v => v && typeof v === 'object' && !Array.isArray(v) && v.scheduleType !== undefined);
+      if(inner) o = inner;
+    }
     const issues = [];
-    const type = ['standard','ab','rotating'].indexOf(o.scheduleType) >= 0 ? o.scheduleType : '';
-    if(!type) return { error:'The reply needs a scheduleType of standard, ab or rotating.' };
+    const stRaw = String(o.scheduleType == null ? '' : o.scheduleType).trim().toLowerCase();
+    const type = /^(ab|a\/b|a-b|a & b|a and b|alternating|ab block|a\/b block)$/.test(stRaw) ? 'ab'
+      : /(rotat|cycle|day 1|numbered)/.test(stRaw) ? 'rotating'
+      : /(standard|traditional|period|every|same|daily|regular)/.test(stRaw) ? 'standard' : '';
+    if(!type) return { error:'The reply needs a scheduleType of standard, ab or rotating' + (stRaw ? ' (it said “' + stRaw.slice(0, 30) + '”).' : '.') };
 
     const WD = { mon:1, tue:2, wed:3, thu:4, fri:5 };
     const wdOf = d => WD[String(d == null ? '' : d).trim().slice(0, 3).toLowerCase()] || 0;
@@ -2923,12 +2943,12 @@
       if(!name) return;
       const cls = { name, teacher: String(c.teacher || '').trim().slice(0, 60), room: String(c.room || '').trim().slice(0, 20), slots: [] };
       arr(c.slots).forEach(s => {
-        const p = Math.round(Number(s && s.period));
+        const p = Math.round(Number(String(s && s.period != null ? s.period : '').replace(/[^0-9.]/g, '')));
         if(!(p >= 1 && p <= classRowIdx.length)){ issues.push(name + ': skipped a slot with an unknown period.'); return; }
-        const d = String(s && s.day != null ? s.day : '').trim();
+        let d = String(s && s.day != null ? s.day : '').trim();
         let cis;
-        if(type === 'ab') cis = [cols.indexOf(d.toUpperCase())];
-        else if(type === 'rotating') cis = [cols.indexOf(String(Number(d)))];
+        if(type === 'ab'){ const mm = d.toUpperCase().match(/\b([AB])\b|^([AB])(?:\s*DAY)?$/); cis = [cols.indexOf(mm ? (mm[1] || mm[2]) : d.toUpperCase())]; }
+        else if(type === 'rotating'){ const mm = d.match(/\d+/); cis = [cols.indexOf(String(mm ? Number(mm[0]) : NaN))]; }
         else if(eff === 'weekdays') cis = (!d || /^every/i.test(d)) ? [0, 1, 2, 3, 4] : [wdOf(d) - 1];
         else { cis = [0]; if(d && !/^every/i.test(d) && !everyNote){ everyNote = true; issues.push('Some day values weren\u2019t recognised, so those classes are treated as every day.'); } }
         if(cis.some(x => x < 0)){ issues.push(name + ': skipped a slot with an unknown day (' + d.slice(0, 10) + ').'); return; }
