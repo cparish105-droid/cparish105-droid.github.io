@@ -547,6 +547,11 @@
      redeploy. Leave them blank to run Docket in local-only
      mode (no accounts, data stays in this browser).
      ========================================================= */
+  /* ---- TYPEBOT (optional guided schedule chat) ----
+     1. Build your bot at typebot.io, publish it, and copy its public ID from the Share tab (the last part of its link).
+     2. Paste the ID below. Leave it empty to hide the button.
+     The bot hands its result to Docket by calling window.docketReceive(schedule) from a Script block (see the instructions). */
+  const TYPEBOT_ID = '';
   const SUPABASE_URL = 'https://muymqaeqiqwnhjjbcnnh.supabase.co';      
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11eW1xYWVxaXF3bmhqamJjbm5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk5MjQ5NTcsImV4cCI6MjEwNTUwMDk1N30.0OqT5S3PRW9pCyqwgMdAyCrMDK0cQipxg3Vj7WfWS7c'; 
 
@@ -662,6 +667,7 @@
       planMyDay: null,
       specialSchedules: [],
       specialDates: [],
+      activities: [],
       settings: {
         theme: 'system',
         accent: 'green',
@@ -741,6 +747,7 @@
     }
     s.specialSchedules = Array.isArray(s.specialSchedules) ? s.specialSchedules : [];
     s.specialDates = Array.isArray(s.specialDates) ? s.specialDates : [];
+    s.activities = Array.isArray(s.activities) ? s.activities : [];
     if(!s.settings.scheduleMode) s.settings.scheduleMode = 'weekday';
     if(!s.settings.abAnchor || !s.settings.abAnchor.date) s.settings.abAnchor = { date: todayISO(), letter: 'A' };
     if(!Array.isArray(s.settings.cycle) || !s.settings.cycle.length) s.settings.cycle = ['A','B'];
@@ -1830,7 +1837,18 @@
     return names[day] || '';
   }
   function compareDay(a,b){ return String(a).localeCompare(String(b), undefined, { numeric:true }); }
+  function activitiesForDate(iso){
+    const d = parseISO(iso); if(!d) return [];
+    const dow = d.getDay();
+    return (state.activities || []).filter(a => (a.days || []).indexOf(dow) >= 0 && !((a.from && iso < a.from) || (a.to && iso > a.to)))
+      .map(a => ({ name:a.name, start:a.start, end:a.end, color:a.color || '#B4691F', activity:true }));
+  }
   function scheduleForDate(iso){
+    const rows = scheduleForDateBase(iso).concat(activitiesForDate(iso));
+    rows.sort((a,b)=> a.start.localeCompare(b.start));
+    return rows;
+  }
+  function scheduleForDateBase(iso){
     const sp = specialDateEntry(iso);
     if(sp){
       const tmpl = getSpecialSchedule(sp.templateId);
@@ -1894,11 +1912,29 @@
      ========================================================= */
   function renderPlanMyDay(container, silent){
     const iso = todayISO();
-    let plan = state.planMyDay && state.planMyDay.date === iso ? state.planMyDay : generatePlan(iso);
+    // The button always makes a fresh plan; the silent redraw on page load reuses today's saved one.
+    let plan = (silent && state.planMyDay && state.planMyDay.date === iso) ? state.planMyDay : generatePlan(iso);
     state.planMyDay = plan;
     saveState();
     drawPlan(container, plan);
     if(!silent) toast('Plan generated');
+  }
+
+  // Guesses how long an assignment will take from how it sounds, when no estimate was set.
+  function guessMinutes(a){
+    if(a.estimate) return { min: a.estimate, guessed:false };
+    const t = ((a.title || '') + ' ' + (a.type || '')).toLowerCase();
+    const rules = [
+      [/\b(research paper|term paper|essay|paper|write-?up|draft|dbq|thesis)\b/, 90],
+      [/\b(project|presentation|slides|poster|portfolio|lab report)\b/, 75],
+      [/\b(study|review|exam|test|midterm|final|quiz)\b/, 45],
+      [/\b(problem set|pset|worksheet|practice|problems|workbook|packet)\b/, 40],
+      [/\b(read|reading|chapter|ch\.?\s*\d|pages?|annotat)/, 30],
+      [/\b(vocab|flashcards?|memorize|notes|journal|reflection|response|discussion)\b/, 20],
+      [/\b(email|sign|form|permission|bring|submit|upload|turn in)\b/, 10]
+    ];
+    for(const [re, m] of rules) if(re.test(t)) return { min: m, guessed:true };
+    return { min: state.settings.defaultDuration || 30, guessed:false };
   }
 
   function generatePlan(iso){
@@ -1913,19 +1949,33 @@
     function toMin(hm){ const [h,m]=hm.split(':').map(Number); return h*60+m; }
     function toHM(min){ return pad2(Math.floor((min%1440)/60)) + ':' + pad2(min%60); }
 
-    const dayStartMin = Math.max(toMin(nowHM()) + 10, toMin('15:30')); // after "now" and not before mid-afternoon by default
+    const classRows = todaysSchedule().filter(r => !r.activity);
+    const schoolEnd = classRows.length ? Math.max.apply(null, classRows.map(r => toMin(r.end))) + 15 : toMin('10:00'); // after school ends, or mid-morning on a day off
+    const dayStartMin = Math.max(toMin(nowHM()) + 10, schoolEnd);
     let cursor = dayStartMin;
     const dayEnd = toMin('21:00');
     const blocks = [];
+    // Study blocks for tests coming up in the next week (nearest first, at most two), longer as the date gets close.
+    state.exams.map(e => ({ e, n: daysBetweenISO(iso, e.date) })).filter(x => x.n !== null && x.n >= 1 && x.n <= 7).sort((x, y) => x.n - y.n).slice(0, 2).forEach(({ e, n }) => {
+      const dur = n <= 2 ? 60 : (n <= 4 ? 45 : 30);
+      let start = cursor, attempts = 0;
+      while(overlaps(toHM(start), toHM(start + dur)) && attempts < 20){ start += 15; attempts++; }
+      if(start + dur > dayEnd) return;
+      const cls = e.classId ? getClass(e.classId) : null;
+      blocks.push({ id: uid(), assignmentId: null, examId: e.id, title: 'Study for ' + e.name, subject: cls ? cls.name : '', start: toHM(start), end: toHM(start + dur),
+        reasons: [n === 1 ? 'test tomorrow' : 'test in ' + n + ' days', 'about ' + dur + ' min'].concat(e.topics ? ['covers ' + e.topics.slice(0, 60)] : []) });
+      busy.push({ start: toHM(start), end: toHM(start + dur) });
+      cursor = start + dur + 10;
+    });
     for(const { a, s } of candidates){
       if(blocks.length >= 5) break;
-      const dur = a.estimate || state.settings.defaultDuration || 30;
+      const g = guessMinutes(a), dur = g.min;
       let start = cursor;
       let attempts = 0;
       while(overlaps(toHM(start), toHM(start+dur)) && attempts < 20){ start += 15; attempts++; }
       const end = start + dur;
       if(end > dayEnd) continue;
-      blocks.push({ id: uid(), assignmentId: a.id, title: a.title, subject: subjectLabel(a), start: toHM(start), end: toHM(end), reasons: s.reasons });
+      blocks.push({ id: uid(), assignmentId: a.id, title: a.title, subject: subjectLabel(a), start: toHM(start), end: toHM(end), reasons: s.reasons.concat(g.guessed ? ['about ' + dur + ' min, guessed from the title'] : []) });
       busy.push({ start: toHM(start), end: toHM(end) });
       cursor = end + 10;
     }
@@ -2488,11 +2538,12 @@
     el.innerHTML = `
       <div class="view-header">
         <div><h1 class="view-title">My Classes</h1><p class="view-sub">${state.classes.length} class${state.classes.length===1?'':'es'}</p></div>
-        <div class="view-actions"><button class="btn-secondary" id="schedBuilderBtn">Schedule builder</button>${ui.classesTab!=='special' ? '<button class="btn-primary" style="width:auto;" id="classNewBtn">+ New class</button>' : ''}</div>
+        <div class="view-actions"><button class="btn-secondary" id="schedBuilderBtn">Schedule builder</button>${ui.classesTab==='special' ? '' : (ui.classesTab==='activities' ? '<button class="btn-primary" style="width:auto;" id="actNewBtn">+ Add activity</button>' : '<button class="btn-primary" style="width:auto;" id="classNewBtn">+ New class</button>')}</div>
       </div>
       <div class="tabs" id="classTabs">
-        <button class="tab ${ui.classesTab!=='special'?'active':''}" data-tab="list">Classes &amp; schedule</button>
+        <button class="tab ${ui.classesTab!=='special' && ui.classesTab!=='activities'?'active':''}" data-tab="list">Classes &amp; schedule</button>
         <button class="tab ${ui.classesTab==='special'?'active':''}" data-tab="special">Special days</button>
+        <button class="tab ${ui.classesTab==='activities'?'active':''}" data-tab="activities">Sports &amp; activities</button>
       </div>
       <div id="classTabBody"></div>
     `;
@@ -2500,6 +2551,8 @@
     byId('schedBuilderBtn').addEventListener('click', openScheduleBuilder);
     if(ui.classesTab === 'special'){
       renderSpecialDaysTab(byId('classTabBody'));
+    } else if(ui.classesTab === 'activities'){
+      renderActivitiesTab(byId('classTabBody'));
     } else {
       byId('classTabBody').innerHTML = `
         <div class="card">
@@ -2680,7 +2733,7 @@
     const dots = [0,1,2].map(i => `<div class="wizard-dot ${i<step?'done':i===step?'active':''}"></div>`).join('');
     let body = '', footer = '';
     if(step === 0){
-      body = `<p class="view-sub">What kind of schedule does your school use?</p><button type="button" class="btn-secondary" id="sbImportBtn" style="width:100%;margin-bottom:12px;">Import from a screenshot using a free AI chat</button>` + SB_TYPES.map(t => `
+      body = `<p class="view-sub">What kind of schedule does your school use?</p><button type="button" class="btn-secondary" id="sbImportBtn" style="width:100%;margin-bottom:12px;">Import from a screenshot using a free AI chat</button>${TYPEBOT_ID ? '<button type="button" class="btn-secondary" id="sbChatBtn" style="width:100%;margin-bottom:12px;">Set up by answering a few questions</button>' : ''}` + SB_TYPES.map(t => `
         <button type="button" class="sb-type ${bld.type===t.id?'sel':''}" data-t="${t.id}"><strong>${t.name}</strong><br><span class="settings-row-hint">${t.desc}</span></button>`).join('') +
         `<p class="settings-row-hint">Short days, advisory days and other one-off schedules can be added afterwards under Classes &rarr; Special days.</p>`;
       footer = `<button class="btn-ghost" id="sbCancel">Cancel</button><div class="modal-footer-right"><button class="btn-primary" style="width:auto;" id="sbNext">Next</button></div>`;
@@ -2738,6 +2791,7 @@
           qsa('.sb-type').forEach(x => x.classList.toggle('sel', x === b));
         }));
         if(byId('sbImportBtn')) byId('sbImportBtn').addEventListener('click', () => openAiImport());
+        if(byId('sbChatBtn')) byId('sbChatBtn').addEventListener('click', () => openTypebotSetup());
         if(byId('sbCancel')) byId('sbCancel').addEventListener('click', closeModal);
         if(byId('sbBack')) byId('sbBack').addEventListener('click', () => { if(step === 1) sbReadStep1(); else sbReadGrid(); bld.step--; renderBuilder(); });
         if(byId('sbNext')) byId('sbNext').addEventListener('click', () => {
@@ -3070,7 +3124,8 @@
       });
       classes.push(cls);
     });
-    if(!classes.length) return { error:'No classes were found in the reply.' };
+    if(!classes.length && !o.allowNoClasses) return { error:'No classes were found in the reply.' };
+    if(!classes.length) issues.push('No classes yet. Add them in the next step by picking a class for each slot.');
     const seen = {};
     classes.forEach(c => c.slots.forEach(s => {
       const k = s.c + ':' + s.r;
@@ -3144,6 +3199,43 @@
           if(res.error){ byId('aiNote').textContent = res.error; return; }
           openAiReview(res, raw, bellRaw);
         });
+      }
+    });
+  }
+
+  // The Typebot calls window.docketReceive(schedule) when it has finished: schedule can be a JSON string or an object in the same format the screenshot import uses.
+  window.docketReceive = function(payload){
+    let raw = '';
+    try{
+      let obj = typeof payload === 'string' ? JSON.parse(payload) : payload;
+      if(obj && typeof obj === 'object' && !Array.isArray(obj)){ obj = Object.assign({}, obj, { allowNoClasses: true }); }
+      raw = JSON.stringify(obj);
+    }catch(e){ raw = typeof payload === 'string' ? payload : ''; }
+    const res = aiParseImport(raw, '');
+    if(res.error){ toast('Couldn’t read the chat’s result', 'error'); openAiImport(raw, res.error); return; }
+    openAiReview(res, raw, '');
+  };
+
+  // Lets the Typebot reuse Docket's own instructions for reading schedule photos, and show a message in Docket.
+  window.DOCKET_IMPORT_PROMPT = AI_IMPORT_PROMPT;
+  window.DOCKET_BELL_PROMPT = AI_BELL_PROMPT;
+  window.docketNotify = function(message, type){ toast(String(message || ''), type || 'error'); };
+
+  function openTypebotSetup(){
+    if(!TYPEBOT_ID){ toast('Typebot isn’t set up yet', 'error'); return; }
+    openModal({
+      title:'Set up your schedule', large:true,
+      bodyHtml:`<p class="view-sub">Answer a few questions and Docket will build your schedule. You can check everything before it is saved.</p>
+        <typebot-standard id="docketTypebot" style="width:100%;height:520px;display:block;"></typebot-standard>
+        <p class="login-note" id="tbNote"></p>`,
+      footerHtml:`<button class="btn-ghost" id="tbBack">Back</button><div class="modal-footer-right"><button class="btn-secondary" id="tbPaste">Paste a reply instead</button></div>`,
+      onMount(){
+        byId('tbBack').addEventListener('click', () => renderBuilder());
+        byId('tbPaste').addEventListener('click', () => openAiImport());
+        import('https://cdn.jsdelivr.net/npm/@typebot.io/js@0/dist/web.js').then(mod => {
+          const Typebot = mod.default || mod;
+          Typebot.initStandard({ id:'docketTypebot', typebot: TYPEBOT_ID, prefilledVariables: { 'Today': todayISO() } });
+        }).catch(() => { byId('tbNote').textContent = 'The chat couldn’t load. Check your connection, or use “Paste a reply instead”.'; });
       }
     });
   }
@@ -3411,6 +3503,58 @@
           if(isNew){ state.specialSchedules.push(t); }
           else{ const orig = getSpecialSchedule(t.id); orig.name = t.name; orig.blocks = t.blocks; }
           saveState(); closeModal(); renderCurrentView(); toast(isNew?'Special schedule created':'Saved','success');
+        });
+      }
+    });
+  }
+
+  /* ---------- Sports & activities ---------- */
+  const DOW_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  function actDaysText(days){
+    const d = (days || []).slice().sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7));
+    if(d.length === 5 && [1,2,3,4,5].every(x => d.indexOf(x) >= 0)) return 'Weekdays';
+    return d.map(x => DOW_SHORT[x]).join(', ');
+  }
+  function renderActivitiesTab(el){
+    const acts = (state.activities || []).slice().sort((a, b) => a.start.localeCompare(b.start));
+    el.innerHTML = `<div class="card">
+      <p class="card-title">Sports &amp; activities <small>practice, games, clubs, a job, anything that fills part of your day</small></p>
+      ${acts.length ? acts.map(a => `<div class="sp-item">
+        <div><span class="sp-name" style="border-left:4px solid ${escapeHtml(a.color || '#B4691F')};padding-left:8px;">${escapeHtml(a.name)}</span>
+          <span class="settings-row-hint">${escapeHtml(actDaysText(a.days))} &middot; ${fmtTime12(a.start)}&ndash;${fmtTime12(a.end)}${a.from || a.to ? ' &middot; ' + (a.from ? shortDate(a.from) : 'start') + ' to ' + (a.to ? shortDate(a.to) : 'end of year') : ''}</span></div>
+        <div class="sp-actions"><button class="btn-ghost" data-edit-act="${a.id}">Edit</button></div></div>`).join('')
+        : '<p class="empty-state">Nothing here yet. Add a sport, club or job and it will show up in your daily schedule, so your study time can plan around it.</p>'}
+      </div>`;
+    qsa('[data-edit-act]', el).forEach(b => b.addEventListener('click', () => openActivityModal((state.activities || []).find(a => a.id === b.dataset.editAct))));
+    const nb = byId('actNewBtn'); if(nb) nb.addEventListener('click', () => openActivityModal(null));
+  }
+  function openActivityModal(act){
+    const a = act || { name:'', days:[1,2,3,4,5], start:'15:30', end:'17:30', from:'', to:'', color:'#B4691F' };
+    openModal({
+      title: act ? 'Edit activity' : 'Add sport or activity', small:true,
+      bodyHtml:`<div class="field"><label for="actName">Name</label><input type="text" id="actName" maxlength="60" placeholder="e.g. Soccer practice, Robotics club" value="${escapeHtml(a.name)}"></div>
+        <p class="field-label">Days</p>
+        <div class="day-strip">${[1,2,3,4,5,6,0].map(d => `<label class="chk"><input type="checkbox" class="actDay" value="${d}" ${a.days.indexOf(d) >= 0 ? 'checked' : ''}> ${DOW_SHORT[d]}</label>`).join('')}</div>
+        <div class="field-row" style="margin-top:12px;"><div class="field"><label for="actStart">Starts</label><input type="time" id="actStart" value="${a.start}"></div><div class="field"><label for="actEnd">Ends</label><input type="time" id="actEnd" value="${a.end}"></div></div>
+        <div class="field-row"><div class="field"><label for="actFrom">Season starts (optional)</label><input type="date" id="actFrom" value="${a.from || ''}"></div><div class="field"><label for="actTo">Season ends (optional)</label><input type="date" id="actTo" value="${a.to || ''}"></div></div>
+        <div class="field"><label for="actColor">Color</label><input type="color" id="actColor" value="${a.color || '#B4691F'}"></div>
+        <p class="login-note" id="actNote"></p>`,
+      footerHtml:`${act ? '<button class="btn-ghost" id="actDelete">Delete</button>' : '<button class="btn-ghost" id="actCancel">Cancel</button>'}<div class="modal-footer-right"><button class="btn-primary" style="width:auto;" id="actSave">Save</button></div>`,
+      onMount(){
+        const cancel = byId('actCancel'); if(cancel) cancel.addEventListener('click', closeModal);
+        const del = byId('actDelete');
+        if(del) del.addEventListener('click', () => confirmDialog('Delete “' + a.name + '”?', { confirmLabel:'Delete', onConfirm(){ state.activities = state.activities.filter(x => x.id !== a.id); saveState(); closeModal(); renderCurrentView(); } }));
+        byId('actSave').addEventListener('click', () => {
+          const name = byId('actName').value.trim(), days = qsa('.actDay').filter(x => x.checked).map(x => Number(x.value));
+          const start = byId('actStart').value, end = byId('actEnd').value, from = byId('actFrom').value, to = byId('actTo').value;
+          const note = m => { byId('actNote').textContent = m; };
+          if(!name) return note('Give it a name.');
+          if(!days.length) return note('Pick at least one day.');
+          if(!start || !end || end <= start) return note('Set a start time and an end time after it.');
+          if(from && to && to < from) return note('The season should end after it starts.');
+          const rec = { id: act ? act.id : uid(), name, days, start, end, from, to, color: byId('actColor').value };
+          if(act) state.activities = state.activities.map(x => x.id === act.id ? rec : x); else state.activities.push(rec);
+          saveState(); closeModal(); toast('Saved', 'success'); renderCurrentView();
         });
       }
     });
